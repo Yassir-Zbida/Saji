@@ -34,13 +34,22 @@ use App\Http\Controllers\AddressController;
 */
 
 // Home and Static Pages
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('ù');
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
 Route::get('/terms', [PageController::class, 'terms'])->name('terms');
 Route::get('/privacy', [PageController::class, 'privacy'])->name('privacy');
 Route::get('/faq', [PageController::class, 'faq'])->name('faq');
+
+// Policies and Legal Pages
+
+Route::view('/privacy-policy', 'privacy-policy')->name('privacy.policy');
+Route::view('/terms-and-conditions', 'terms')->name('terms');
+Route::view('/shipping-policy', 'shipping-policy')->name('shipping.policy');
+Route::view('/return-policy', 'return-policy')->name('return.policy');
+Route::view('/refund-policy', 'refund-policy')->name('refund.policy');
+Route::view('/cookie-policy', 'cookie-policy')->name('cookie.policy');
 
 // Authentication Routes
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');

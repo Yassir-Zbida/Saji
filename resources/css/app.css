@@ -5,7 +5,168 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+
+
+/* Custom Font Classes */
+.font-jost {
+    font-family: 'Jost', sans-serif;
 }
+.font-jakarta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Remove Italiana font and replace with Jakarta */
+.font-italiana {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Cart and Sidebar transitions */
+.sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    border-radius: 0 8px 8px 0; /* Added border radius */
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.cart-sidebar {
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    border-radius: 8px 0 0 8px; /* Added border radius */
+}
+
+.cart-sidebar.open {
+    transform: translateX(0);
+}
+
+.overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.overlay.active {
+    opacity: 0.7;
+}
+
+/* Button Hover Effects */
+.hover-underline {
+    position: relative;
+}
+
+.hover-underline:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    background: currentColor;
+    bottom: -2px;
+    left: 0;
+    transition: width 0.3s ease;
+}
+
+.hover-underline:hover:after {
+    width: 100%;
+}
+
+.main-header{
+    border-top-right-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+
+
+/* Category link hover effect */
+.category-link {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.category-link:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    background: black;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+.category-link:hover:after {
+    width: 60%;
+}
+
+/* Fix search icon alignment */
+.search-container {
+    position: relative;
+}
+
+.search-input {
+    padding-left: 2.5rem; /* Make room for icon */
+    border-radius: 4px; /* Added border radius */
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Add border radius to various elements */
+.icon-btn, 
+.cart-btn,
+button.bg-black,
+button.border,
+input[type="text"],
+.bg-gray-100 {
+    border-radius: 4px;
+}
+
+/* Fix image display */
+.category-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    display: inline-block;
+}
+
+/* Profile images */
+.profile-img {
+    object-fit: cover;
+    border-radius: 50%;
+}
+

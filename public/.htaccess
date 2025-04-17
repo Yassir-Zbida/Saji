@@ -1,4 +1,6 @@
 <IfModule mod_rewrite.c>
+    php_value memory_limit 256M
+
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
