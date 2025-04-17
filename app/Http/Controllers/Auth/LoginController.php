@@ -24,6 +24,9 @@ class LoginController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
+
+    // }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -34,10 +37,14 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Redirect based on user role
             $user = Auth::user();
-            if ($user->isAdmin() || $user->isManager()) {
-                return redirect()->intended('dashboard');
+
+            if ($user->isAdmin()) {
+                return redirect()->route('dashboard');
+            } elseif ($user->isManager()) {
+                return redirect()->route('dashboard');
+            } elseif ($user->isSupportAgent()) {
+                return redirect()->route('dashboard.tickets.index');
             } else {
                 return redirect()->intended('/');
             }
@@ -47,6 +54,7 @@ class LoginController extends Controller
             'email' => 'The provided credentials do not match our records.',
         ])->withInput($request->except('password'));
     }
+
 
     /**
      * Log the user out.

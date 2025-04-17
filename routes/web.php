@@ -22,16 +22,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AddressController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+
 
 // Home and Static Pages
 Route::get('/', [HomeController::class, 'index'])->name('ù');
@@ -72,6 +63,8 @@ Route::get('/login/google', [App\Http\Controllers\Auth\LoginController::class, '
 Route::get('/login/google/callback', [App\Http\Controllers\Auth\LoginController::class, 'handleGoogleCallback']);
 Route::get('/login/facebook', [App\Http\Controllers\Auth\LoginController::class, 'redirectToFacebook'])->name('login.facebook');
 Route::get('/login/facebook/callback', [App\Http\Controllers\Auth\LoginController::class, 'handleFacebookCallback']);
+
+
 
 // Shop Routes (Public)
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
@@ -155,6 +148,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/maintenance/clear-cache', [SettingController::class, 'clearCache'])->name('maintenance.clear-cache');
 });
 
+
+
 // Customer routes
 Route::middleware(['auth', 'role:customer'])->group(function () {
     // Account Dashboard
@@ -210,14 +205,26 @@ Route::post('/cart/promo', [CartController::class, 'applyPromo'])->name('cart.pr
     Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
     
     // Support Tickets for Customers
-    Route::get('/account/support-tickets', [SupportTicketController::class, 'customerIndex'])->name('account.support-tickets');
-    Route::get('/account/support-tickets/create', [SupportTicketController::class, 'customerCreate'])->name('account.support-tickets.create');
-    Route::post('/account/support-tickets', [SupportTicketController::class, 'customerStore'])->name('account.support-tickets.store');
-    Route::get('/account/support-tickets/{ticket}', [SupportTicketController::class, 'customerShow'])->name('account.support-tickets.show');
-    Route::post('/account/support-tickets/{ticket}/reply', [SupportTicketController::class, 'customerReply'])->name('account.support-tickets.reply');
+    Route::middleware(['auth'])->group(function () {
+        // Support Tickets for Customers
+        Route::get('/account/support-tickets', [SupportTicketController::class, 'customerIndex'])->name('account.support-tickets');
+        Route::get('/account/support-tickets/create', [SupportTicketController::class, 'customerCreate'])->name('account.support-tickets.create');
+        Route::post('/account/support-tickets', [SupportTicketController::class, 'customerStore'])->name('account.support-tickets.store');
+        Route::get('/account/support-tickets/{ticket}', [SupportTicketController::class, 'customerShow'])->name('account.support-tickets.show');
+        Route::post('/account/support-tickets/{ticket}/reply', [SupportTicketController::class, 'customerReply'])->name('account.support-tickets.reply');
+    });
+    
 });
 
-// Fallback route for 404
+
+// support agents dashbord
+Route::middleware(['auth', 'role:support_agent'])->group(function () {
+    Route::get('/dashboard/tickets', [SupportTicketController::class, 'index'])->name('dashboard.tickets.index');
+});
+
+
+
+// route for 404 error view 
 Route::fallback(function () {
     return view('errors.404');
 });

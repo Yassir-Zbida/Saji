@@ -119,26 +119,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'admin';
     }
 
-    /**
-     * Check if the user is a shop manager.
-     *
-     * @return bool
-     */
-    public function isShopManager()
-    {
-        return $this->role === 'shop_manager';
-    }
-
-    /**
-     * Check if the user is a support agent.
-     *
-     * @return bool
-     */
     public function isSupportAgent()
     {
         return $this->role === 'support_agent';
     }
-
+    public function isManager()
+    {
+        return $this->role === 'shop_manager'; 
+    }
     /**
      * Check if the user is a customer.
      *

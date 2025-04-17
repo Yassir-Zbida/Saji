@@ -24,7 +24,8 @@ class ShopController extends Controller
             ->get();
                 
             
-        return view('shop', compact('products', 'featuredProducts'));
+        return view('shop.index', compact('products', 'featuredProducts'));
+
     }
     
     /**

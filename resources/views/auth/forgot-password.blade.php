@@ -5,9 +5,7 @@
 @section('content')
 <div class="flex min-h-screen items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-5xl">
-        <!-- Auth Card -->
         <div class="overflow-hidden bg-white rounded-lg shadow-medium flex">
-            <!-- Form Side -->
             <div class="w-full md:w-1/2 p-8">
                 <div class="mb-10">
                     <h2 class="text-2xl font-jakarta font-semibold text-primary mb-2">Forgot Password</h2>
@@ -55,7 +53,6 @@
                     </div>
                 </form>
                 
-                <!-- Back to Login Link -->
                 <div class="mt-4 text-center">
                     <p class="text-sm text-gray-600">
                         Remembered your password? 
@@ -65,16 +62,14 @@
                     </p>
                 </div>
                 
-                <!-- Footer -->
                 <div class="mt-10 text-center">
                     <p class="text-xs text-gray-500">
                         Need help? Contact 
-                        <a href="/support" class="text-primary hover:underline">SAJI HOME Support</a>
+                        <a href="{{ route('account.support-tickets') }}" class="text-primary hover:underline">SAJI HOME Support</a>
                     </p>
                 </div>
             </div>
             
-            <!-- Image Side -->
             <div class="hidden md:block md:w-1/2 bg-gray-100">
                 <img src="{{ asset('images/login.webp') }}" alt="SAJI HOME Furniture" class="w-full h-full object-cover">
             </div>
@@ -86,7 +81,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.getElementById('email');
     
-    // Validation patterns
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     
     // Real-time validation
