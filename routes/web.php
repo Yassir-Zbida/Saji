@@ -44,12 +44,15 @@ Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 
 // Policies and Legal Pages
 
-Route::view('/privacy-policy', 'privacy-policy')->name('privacy.policy');
-Route::view('/terms-and-conditions', 'terms')->name('terms');
-Route::view('/shipping-policy', 'shipping-policy')->name('shipping.policy');
-Route::view('/return-policy', 'return-policy')->name('return.policy');
-Route::view('/refund-policy', 'refund-policy')->name('refund.policy');
-Route::view('/cookie-policy', 'cookie-policy')->name('cookie.policy');
+Route::view('/privacy-policy', 'policies.privacy-policy')->name('privacy.policy');
+Route::view('/terms-and-conditions', 'policies.terms')->name('terms');
+Route::view('/shipping-policy', 'policies.shipping-policy')->name('shipping.policy');
+Route::view('/return-policy', 'policies.return-policy')->name('return.policy');
+Route::view('/refund-policy', 'policies.refund-policy')->name('refund.policy');
+Route::view('/cookie-policy', 'policies.cookie-policy')->name('cookie.policy');
+
+// Authentication Routes
+
 
 // Authentication Routes
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');

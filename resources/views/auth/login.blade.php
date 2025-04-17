@@ -106,9 +106,9 @@
                 <div class="mt-10 text-center">
                     <p class="text-xs text-gray-500">
                         By signing in, you agree to our 
-                        <a href="#" class="text-primary hover:underline">Terms of Service</a> and 
-                        <a href="#" class="text-primary hover:underline">Privacy Policy</a>
-                    </p>
+                        <a href="{{ route('terms') }}" class="text-primary hover:underline">Terms of Service</a> and 
+                        <a href="{{ route('privacy.policy') }}" class="text-primary hover:underline">Privacy Policy</a>.
+                    </p>                    
                 </div>
             </div>
             

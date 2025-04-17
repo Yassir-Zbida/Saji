@@ -69,7 +69,7 @@
                 <div class="mt-10 text-center">
                     <p class="text-xs text-gray-500">
                         Need help? Contact 
-                        <a href="#" class="text-primary hover:underline">SAJI HOME Support</a>
+                        <a href="/support" class="text-primary hover:underline">SAJI HOME Support</a>
                     </p>
                 </div>
             </div>
