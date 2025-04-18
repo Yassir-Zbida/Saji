@@ -43,7 +43,7 @@
                     <i class="ri-heart-line text-xl transition-transform"></i>
                 </button>
                 
-                <a href="/login" class="account-btn hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white ">
+                <a href="{{ Auth::check() ? (Auth::user()->isAdmin() || Auth::user()->isManager() || Auth::user()->isSupportAgent() ? route('dashboard') : '/profile') : '/login' }}" class="account-btn hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white ">
                     <i class="ri-user-line text-xl transition-transform"></i>
                 </a>
                 

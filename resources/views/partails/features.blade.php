@@ -1,5 +1,5 @@
 <!-- Philosophy Section -->
-<section class="design-philosophy py-14 bg-white">
+<section class="design-philosophy bg-white md:px-4">
     <div class="container mx-auto px-4">
         <div class="text-left mb-12">
             <h2 class="text-3xl md:text-4xl font-bold mb-3">Our Design Philosophy</h2>
@@ -70,7 +70,7 @@
             </div>
         </div>
 
-        <div class="mb-20 relative">
+        <div class=" relative">
             <div class="rounded-3xl bg-black text-white p-8 md:p-12">
                 <div class="max-w-2xl">
                     <h3 class="text-2xl font-bold mb-4">Our Design System</h3>

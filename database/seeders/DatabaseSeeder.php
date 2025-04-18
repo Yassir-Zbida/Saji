@@ -14,15 +14,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             CategorySeeder::class,
-            ProductAttributeSeeder::class,
-            AttributeValueSeeder::class,
             ProductSeeder::class,
-            TagSeeder::class,
+            ProductAttributeSeeder::class,
             ProductVariationSeeder::class,
-            CouponSeeder::class,
-            SettingSeeder::class,
-            ShippingZoneSeeder::class,
             ShippingMethodSeeder::class,
+            ShippingZoneSeeder::class,
+            OrderSeeder::class, // Added OrderSeeder to database seeder
         ]);
     }
 }

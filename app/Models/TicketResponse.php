@@ -15,7 +15,7 @@ class TicketResponse extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'support_ticket_id',
+        'ticket_i',
         'user_id',
         'message',
         'is_private',

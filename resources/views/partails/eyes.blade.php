@@ -1,5 +1,5 @@
 <!-- Eyes Section -->
-<section class="eyes-section relative py-20 bg-white overflow-hidden">
+<section class="eyes-section relative py-20 bg-white overflow-hidden lg:px-4">
     <div class="absolute top-0 left-0 w-full h-full opacity-5 z-0 pattern-bg"></div>
     
     <div class="container mx-auto relative z-10 px-4">

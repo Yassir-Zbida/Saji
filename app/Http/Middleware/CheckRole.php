@@ -30,6 +30,6 @@ class CheckRole
             }
         }
 
-        return redirect('/')->with('error', 'You do not have permission to access this page.');
+        return redirect('/403')->with('error', 'You do not have permission to access this page.');
     }
 }

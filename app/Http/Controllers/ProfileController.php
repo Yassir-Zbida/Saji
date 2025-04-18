@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -18,7 +19,7 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('profile.index', compact('user'));
+        return view('account.index', compact('user'));
     }
     
     /**
@@ -27,7 +28,7 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = Auth::user();
-        return view('profile.edit', compact('user'));
+        return view('account.edit', compact('user'));
     }
     
     /**
@@ -47,7 +48,7 @@ class ProfileController extends Controller
         // Verify current password if changing password
         if ($request->filled('current_password')) {
             if (!Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors(['current_password' => 'Le mot de passe actuel est incorrect.'])->withInput();
+                return back()->withErrors(['current_password' => 'The current password is incorrect.'])->withInput();
             }
         }
         
@@ -62,8 +63,8 @@ class ProfileController extends Controller
             ]);
         }
         
-        return redirect()->route('profile.index')
-            ->with('success', 'Profil mis à jour avec succès.');
+        return redirect()->route('account.index')
+            ->with('success', 'Profile updated successfully.');
     }
     
     /**
@@ -75,7 +76,7 @@ class ProfileController extends Controller
         $shippingAddresses = $user->addresses()->where('address_type', 'shipping')->get();
         $billingAddresses = $user->addresses()->where('address_type', 'billing')->get();
         
-        return view('profile.addresses', compact('shippingAddresses', 'billingAddresses'));
+        return view('account.addresses', compact('shippingAddresses', 'billingAddresses'));
     }
     
     /**
@@ -83,7 +84,7 @@ class ProfileController extends Controller
      */
     public function createAddress()
     {
-        return view('profile.addresses.create');
+        return view('account.addresses.create');
     }
     
     /**
@@ -119,8 +120,8 @@ class ProfileController extends Controller
         
         $user->addresses()->create($request->all());
         
-        return redirect()->route('profile.addresses')
-            ->with('success', 'Adresse ajoutée avec succès.');
+        return redirect()->route('account.addresses')
+            ->with('success', 'Address added successfully.');
     }
     
     /**
@@ -133,7 +134,7 @@ class ProfileController extends Controller
             abort(403);
         }
         
-        return view('profile.addresses.edit', compact('address'));
+        return view('account.addresses.edit', compact('address'));
     }
     
     /**
@@ -174,8 +175,8 @@ class ProfileController extends Controller
         
         $address->update($request->all());
         
-        return redirect()->route('profile.addresses')
-            ->with('success', 'Adresse mise à jour avec succès.');
+        return redirect()->route('account.addresses')
+            ->with('success', 'Address updated successfully.');
     }
     
     /**
@@ -188,19 +189,52 @@ class ProfileController extends Controller
             abort(403);
         }
         
-        // Check if address is used in any orders
-        $isUsedInOrders = Order::where('shipping_address_id', $address->id)
-            ->orWhere('billing_address_id', $address->id)
-            ->exists();
+        // Check if the orders table has the shipping/billing address columns
+        $hasAddressColumns = false;
+        
+        try {
+            // Safely check if these columns exist in the orders table
+            $columnsExist = DB::select("
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'orders' 
+                AND COLUMN_NAME IN ('shipping_address_id', 'billing_address_id')
+            ");
+            
+            $hasAddressColumns = count($columnsExist) > 0;
+        } catch (\Exception $e) {
+            // If there's any error, assume columns don't exist
+            $hasAddressColumns = false;
+        }
+        
+        $isUsedInOrders = false;
+        
+        if ($hasAddressColumns) {
+            // If the columns exist, check if address is used in any orders
+            $isUsedInOrders = Order::where(function($query) use ($address) {
+                $query->where('shipping_address_id', $address->id)
+                      ->orWhere('billing_address_id', $address->id);
+            })->exists();
+        } else {
+            // Alternative check - look for any relationships in your order system
+            // For example, if you have an order_addresses table:
+            $isUsedInOrders = false;
+            
+            // Uncomment and modify this if you have a different relationship structure
+            // $isUsedInOrders = DB::table('order_addresses')
+            //     ->where('address_id', $address->id)
+            //     ->exists();
+        }
             
         if ($isUsedInOrders) {
-            return back()->with('error', 'Cette adresse ne peut pas être supprimée car elle est utilisée dans des commandes.');
+            return back()->with('error', 'This address cannot be deleted because it is used in orders.');
         }
         
         $address->delete();
         
-        return redirect()->route('profile.addresses')
-            ->with('success', 'Adresse supprimée avec succès.');
+        return redirect()->route('account.addresses')
+            ->with('success', 'Address deleted successfully.');
     }
     
     /**
@@ -211,7 +245,7 @@ class ProfileController extends Controller
         $user = Auth::user();
         $orders = $user->orders()->with('items')->latest()->paginate(10);
         
-        return view('profile.orders', compact('orders'));
+        return view('account.orders', compact('orders'));
     }
     
     /**
@@ -226,6 +260,6 @@ class ProfileController extends Controller
         
         $order->load('items.product', 'items.productVariation', 'shippingAddress', 'billingAddress', 'transactions');
         
-        return view('profile.orders.show', compact('order'));
+        return view('account.orders.show', compact('order'));
     }
 }

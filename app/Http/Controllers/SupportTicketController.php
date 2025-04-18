@@ -5,25 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\SupportTicket;
 use App\Models\TicketResponse;
 use App\Models\User;
-use App\Notifications\NewSupportTicketNotification;
-use App\Notifications\TicketResponseNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
 class SupportTicketController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-
-    public function customerIndex()
-    {
-        // Example: Fetch tickets for the authenticated user
-        $tickets = SupportTicket::where('user_id', auth()->id())->latest()->get();
-
-        return view('dashboard.tickets.index', compact('tickets'));
-    }
 
     public function index(Request $request)
     {
@@ -108,14 +95,6 @@ class SupportTicketController extends Controller
             'status' => 'open',
             'priority' => $request->priority,
         ]);
-
-        // Notify admins about new ticket
-        if (!Auth::user()->isAdmin()) {
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                $admin->notify(new NewSupportTicketNotification($ticket));
-            }
-        }
 
         return redirect()->route('dashboard.tickets.index')
             ->with('success', 'Support ticket created successfully.');
@@ -212,7 +191,7 @@ class SupportTicketController extends Controller
         ]);
 
         $response = TicketResponse::create([
-            'support_ticket_id' => $supportTicket->id,
+            'ticket_id' => $supportTicket->id,
             'user_id' => Auth::id(),
             'message' => $request->message,
         ]);
@@ -220,18 +199,6 @@ class SupportTicketController extends Controller
         // Update ticket status if needed
         if ($supportTicket->status === 'open' && (Auth::user()->isAdmin() || Auth::user()->isManager())) {
             $supportTicket->update(['status' => 'in_progress']);
-        }
-
-        // Notify the appropriate users
-        if (Auth::id() === $supportTicket->user_id) {
-            // Customer responded, notify admins
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                $admin->notify(new TicketResponseNotification($supportTicket, $response));
-            }
-        } else {
-            // Admin/manager responded, notify customer
-            $supportTicket->user->notify(new TicketResponseNotification($supportTicket, $response));
         }
 
         return redirect()->route('support-tickets.show', $supportTicket->id)
@@ -267,6 +234,128 @@ class SupportTicketController extends Controller
         $supportTicket->update(['status' => 'open']);
 
         return redirect()->route('dashboard.tickets.index')
+            ->with('success', 'Ticket reopened successfully.');
+    }
+
+    /**
+     * Show the customer ticket listing page.
+     */
+    public function customerIndex()
+    {
+        $tickets = SupportTicket::where('user_id', Auth::id())->latest()->get();
+        
+        return view('account.tickets.index', compact('tickets'));
+    }
+
+    /**
+     * Show the form for a customer to create a new ticket.
+     */
+    public function customerCreate()
+    {
+        return view('account.tickets.create');
+    }
+
+    /**
+     * Store a newly created ticket from a customer.
+     */
+    public function customerStore(Request $request)
+    {
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'priority' => 'required|in:low,medium,high',
+        ]);
+
+        $ticket = SupportTicket::create([
+            'user_id' => Auth::id(),
+            'ticket_number' => 'TIC-' . strtoupper(Str::random(8)),
+            'subject' => $request->subject,
+            'message' => $request->message,
+            'status' => 'open',
+            'priority' => $request->priority,
+        ]);
+
+        return redirect()->route('account.tickets')
+            ->with('success', 'Support ticket created successfully.');
+    }
+
+    /**
+     * Display a specific ticket for a customer.
+     */
+    public function customerShow(SupportTicket $ticket)
+    {
+        // Check if ticket belongs to authenticated user
+        if ($ticket->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $ticket->load('responses.user');
+
+        return view('account.tickets.show', compact('ticket'));
+    }
+
+    /**
+ * Add a customer reply to a support ticket.
+ */
+public function customerReply(Request $request, SupportTicket $ticket)
+{
+    // Check if ticket belongs to authenticated user
+    if ($ticket->user_id !== Auth::id()) {
+        abort(403);
+    }
+
+    $request->validate([
+        'message' => 'required|string',
+    ]);
+
+    // Create a new ticket response with explicit ticket_id
+    $response = new TicketResponse();
+    $response->ticket_id = $ticket->id;
+    $response->user_id = Auth::id();
+    $response->message = $request->message;
+    $response->save();
+
+    // Alternative approach using create with explicit ticket_id
+    // $response = TicketResponse::create([
+    //     'ticket_id' => $ticket->id,
+    //     'user_id' => Auth::id(),
+    //     'message' => $request->message,
+    // ]);
+
+    return redirect()->route('account.tickets.show', $ticket->id)
+        ->with('success', 'Response added successfully.');
+}
+ 
+
+    /**
+     * Allow a customer to close their own ticket.
+     */
+    public function customerClose(SupportTicket $ticket)
+    {
+        // Check if ticket belongs to authenticated user
+        if ($ticket->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $ticket->update(['status' => 'closed']);
+
+        return redirect()->route('account.tickets')
+            ->with('success', 'Ticket closed successfully.');
+    }
+
+    /**
+     * Allow a customer to reopen their own closed ticket.
+     */
+    public function customerReopen(SupportTicket $ticket)
+    {
+        // Check if ticket belongs to authenticated user
+        if ($ticket->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $ticket->update(['status' => 'open']);
+
+        return redirect()->route('account.tickets')
             ->with('success', 'Ticket reopened successfully.');
     }
 }

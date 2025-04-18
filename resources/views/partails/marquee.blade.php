@@ -1,5 +1,5 @@
 <!-- Marquee Section -->
-<section class="w-full py-24 bg-black overflow-hidden">
+<section class="w-full py-24 bg-black overflow-hidden md:px-4">
     <div class="text-center mb-16 px-5">
         <div class="text-sm uppercase tracking-widest font-medium mb-3 text-gray-400 font-jost">Key Capabilities</div>
         <h2 class="text-4xl md:text-5xl font-bold text-white font-jakarta">What Drives Us</h2>
