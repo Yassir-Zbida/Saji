@@ -37,6 +37,9 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
+            // Store a value in session to indicate user is logged in
+            $request->session()->put('is_logged_in', true);
+
             $user = Auth::user();
 
             if ($user->isAdmin()) {
@@ -46,6 +49,11 @@ class LoginController extends Controller
             } elseif ($user->isSupportAgent()) {
                 return redirect()->route('dashboard.tickets.index');
             } else {
+                // Check if there was a redirect from product page
+                if ($request->has('redirect')) {
+                    return redirect($request->redirect);
+                }
+
                 return redirect()->intended('/');
             }
         }
@@ -65,6 +73,9 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+
+        // Remove the logged-in flag
+        $request->session()->forget('is_logged_in');
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -39,11 +39,16 @@
             </div>
             
             <div class="flex items-center space-x-4">
-                <button class="wishlist-btn hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white">
+                <a href="{{ route('wishlist.index') }}" class="wishlist-nav-link hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white relative">
                     <i class="ri-heart-line text-xl transition-transform"></i>
-                </button>
+                    @if(Auth::check() && Auth::user()->wishlistItems->count() > 0)
+                        <span class="wishlist-count absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                            {{ Auth::user()->wishlistItems->count() }}
+                        </span>
+                    @endif
+                </a>
                 
-                <a href="{{ Auth::check() ? (Auth::user()->isAdmin() || Auth::user()->isManager() || Auth::user()->isSupportAgent() ? route('dashboard') : '/profile') : '/login' }}" class="account-btn hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white ">
+                <a href="{{ Auth::check() ? (Auth::user()->isAdmin() || Auth::user()->isManager() || Auth::user()->isSupportAgent() ? route('dashboard') : '/account') : '/login' }}" class="account-btn hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white ">
                     <i class="ri-user-line text-xl transition-transform"></i>
                 </a>
                 
@@ -142,14 +147,30 @@
         <div class="space-y-4">
             <div class="border-b border-gray-100 pb-4">
                 <h3 class="text-xs uppercase text-gray-500 font-medium mb-3 font-jost">Account</h3>
-                <a href="#" class="flex items-center py-2 text-gray-600 hover:text-gray-900 transition">
-                    <i class="ri-user-line text-lg mr-3"></i>
-                    <span class="font-jost">Login / Register</span>
-                </a>
-                <a href="#" class="flex items-center py-2 text-gray-600 hover:text-gray-900 transition">
-                    <i class="ri-heart-line text-lg mr-3"></i>
-                    <span class="font-jost">Wishlist</span>
-                </a>
+                @if(Auth::check())
+                    <a href="/profile" class="flex items-center py-2 text-gray-600 hover:text-gray-900 transition">
+                        <i class="ri-user-line text-lg mr-3"></i>
+                        <span class="font-jost">My Account</span>
+                    </a>
+                    <a href="{{ route('wishlist.index') }}" class="flex items-center py-2 text-gray-600 hover:text-gray-900 transition">
+                        <i class="ri-heart-line text-lg mr-3"></i>
+                        <span class="font-jost">Wishlist</span>
+                        @if(Auth::user()->wishlistItems->count() > 0)
+                            <span class="ml-2 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                                {{ Auth::user()->wishlistItems->count() }}
+                            </span>
+                        @endif
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="flex items-center py-2 text-gray-600 hover:text-gray-900 transition">
+                        <i class="ri-user-line text-lg mr-3"></i>
+                        <span class="font-jost">Login / Register</span>
+                    </a>
+                    <a href="{{ route('login') }}" class="flex items-center py-2 text-gray-600 hover:text-gray-900 transition">
+                        <i class="ri-heart-line text-lg mr-3"></i>
+                        <span class="font-jost">Wishlist</span>
+                    </a>
+                @endif
             </div>
             
             <div class="border-b border-gray-100 pb-4">
@@ -242,3 +263,13 @@
 </div>
 
 <div id="overlay" class="overlay fixed inset-0 bg-black z-30 hidden"></div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(Auth::check())
+            document.body.classList.add('logged-in');
+        @endif
+    });
+</script>
+@endpush

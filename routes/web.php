@@ -56,20 +56,14 @@ Route::post('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordControl
 Route::get('/reset-password/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
 
-// Goole Login Routes 
-// Route::get('/login/google', [App\Http\Controllers\Auth\LoginController::class, 'redirectToGoogle'])->name('login.google');
-// Route::get('/login/google/callback', [App\Http\Controllers\Auth\LoginController::class, 'handleGoogleCallback']);
-
 
 
 // Customer Account Routes
 Route::middleware(['auth', 'role:customer'])->group(function () {
-    // Profile routes - this is the main account page
     Route::get('/account', [ProfileController::class, 'index'])->name('account.index');
     Route::get('/account/edit', [ProfileController::class, 'edit'])->name('account.edit');
     Route::put('/account', [ProfileController::class, 'update'])->name('account.update');
     
-    // Address routes
     Route::get('/account/addresses', [ProfileController::class, 'addresses'])->name('account.addresses');
     Route::get('/account/addresses/create', [ProfileController::class, 'createAddress'])->name('account.addresses.create');
     Route::post('/account/addresses', [ProfileController::class, 'storeAddress'])->name('account.addresses.store');
@@ -77,11 +71,9 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::put('/account/addresses/{address}', [ProfileController::class, 'updateAddress'])->name('account.addresses.update');
     Route::delete('/account/addresses/{address}', [ProfileController::class, 'destroyAddress'])->name('account.addresses.destroy');
     
-    // Order routes
     Route::get('/account/orders', [ProfileController::class, 'orders'])->name('account.orders');
     Route::get('/account/orders/{order}', [ProfileController::class, 'showOrder'])->name('account.orders.show');
 
-    // Support Tickets for customers
     Route::get('/account/tickets', [SupportTicketController::class, 'customerIndex'])->name('account.tickets');
     Route::get('/account/tickets/create', [SupportTicketController::class, 'customerCreate'])->name('account.tickets.create');
     Route::post('/account/tickets', [SupportTicketController::class, 'customerStore'])->name('account.tickets.store');
@@ -90,13 +82,31 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/account/tickets/{ticket}/close', [SupportTicketController::class, 'customerClose'])->name('account.tickets.close');
     Route::post('/account/tickets/{ticket}/reopen', [SupportTicketController::class, 'customerReopen'])->name('account.tickets.reopen');
     
-    // Profile additional routes (these should point to the same controller)
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
-    Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::get('/product/{id}', 'App\Http\Controllers\ProductController@show')->name('products.show');
+
+     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+     Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+     Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+
+     
+     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+     Route::post('/wishlist/add', [WishlistController::class, 'add'])->name('wishlist.add');
+     Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+     Route::post('/wishlist/clear', [WishlistController::class, 'clear'])->name('wishlist.clear');
+     
+     Route::post('/wishlist/{id}/move-to-cart', [WishlistController::class, 'moveToCart'])->name('wishlist.moveToCart');
+     Route::post('/wishlist/{id}/update-notes', [WishlistController::class, 'updateNotes'])->name('wishlist.updateNotes');
+     
+     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    
 });
+
+Route::post('/wishlist/check-products', [WishlistController::class, 'checkProducts'])->name('wishlist.checkProducts');
+Route::get('/wishlist/count', [WishlistController::class, 'getCount'])->name('wishlist.count');
+
+
 
 
 // Shop Routes (Public)

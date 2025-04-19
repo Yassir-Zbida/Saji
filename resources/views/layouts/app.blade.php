@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     
     @vite(['resources/css/app.css', 'resources/js/navigation.js'])
@@ -34,7 +35,7 @@
         }
     </script>
 </head>
-<body class="bg-secondary font-jakarta">
+<body class="bg-secondary font-jakarta {{ Auth::check() ? 'logged-in' : '' }}">
     <div class="min-h-screen">
         @include('partails.header')
         

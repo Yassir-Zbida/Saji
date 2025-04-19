@@ -3,9 +3,9 @@
 
 @section('content')
     @include('partails.hero')
-    @include('partails.eyes')
-    @include('partails.marquee')
+    @include('partails.products') 
     @include('partails.features')
+    @include('partails.eyes')    
     @include('partails.testimonials')
     
 @endsection

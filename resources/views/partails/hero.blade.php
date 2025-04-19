@@ -1,6 +1,6 @@
 <section class="hero-section relative min-h-screen overflow-hidden flex items-center justify-center">
     <div class="absolute inset-0 bg-cover bg-center bg-no-repeat hero-bg"
-         style="background-image: url('{{ asset('images/hero.webp') }}');"></div>
+         style="background-image: url('{{ asset('images/hero-new.webp') }}');"></div>
     
     <div class="absolute inset-0 bg-black/30"></div>
     

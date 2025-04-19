@@ -15,7 +15,7 @@ class HomeController extends Controller
     {
         // Get featured products
         $featuredProducts = Product::where('is_active', 1)
-            ->where('featured', 1) // Make sure you have this column in your products table
+            ->where('featured', 1) 
             ->limit(8)
             ->get();
             

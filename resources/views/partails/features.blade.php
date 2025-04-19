@@ -1,5 +1,5 @@
 <!-- Philosophy Section -->
-<section class="design-philosophy bg-white md:px-4">
+<section class="design-philosophy bg-white md:px-4 pt-16">
     <div class="container mx-auto px-4">
         <div class="text-left mb-12">
             <h2 class="text-3xl md:text-4xl font-bold mb-3">Our Design Philosophy</h2>

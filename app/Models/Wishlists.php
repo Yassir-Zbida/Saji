@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WishlistItem extends Model
+class Wishlists extends Model
 {
     use HasFactory;
 
@@ -17,17 +17,8 @@ class WishlistItem extends Model
     protected $fillable = [
         'user_id',
         'product_id',
-        'product_variation_id',
-        'options',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'options' => 'json',
+        'variation_id',
+        'notes',
     ];
 
     /**
@@ -49,9 +40,9 @@ class WishlistItem extends Model
     /**
      * Get the product variation that owns the wishlist item.
      */
-    public function productVariation()
+    public function variation()
     {
-        return $this->belongsTo(ProductVariation::class);
+        return $this->belongsTo(ProductVariation::class, 'variation_id');
     }
 
     /**
@@ -61,7 +52,7 @@ class WishlistItem extends Model
      */
     public function hasVariation()
     {
-        return $this->product_variation_id !== null;
+        return $this->variation_id !== null;
     }
 
     /**
@@ -71,8 +62,8 @@ class WishlistItem extends Model
      */
     public function isInStock()
     {
-        if ($this->productVariation) {
-            return $this->productVariation->isInStock();
+        if ($this->hasVariation() && $this->variation) {
+            return $this->variation->isInStock();
         }
 
         return $this->product->isInStock();
@@ -85,8 +76,8 @@ class WishlistItem extends Model
      */
     public function getPriceAttribute()
     {
-        if ($this->productVariation) {
-            return $this->productVariation->current_price;
+        if ($this->hasVariation() && $this->variation) {
+            return $this->variation->current_price;
         }
 
         return $this->product->current_price;
