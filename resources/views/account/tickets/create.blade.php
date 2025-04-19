@@ -126,9 +126,9 @@
                 <i class="ri-question-line text-xl text-gray-500 mr-3"></i>
                 <h3 class="text-lg font-medium text-primary">Help & Guidelines</h3>
             </div>
-            <div class="p-6">
+            <div class="p-6 ">
                 <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-gray-50 rounded-lg p-5">
+                    <div class="bg-gray-50 rounded-lg p-5 border-gray-200 border">
                         <h4 class="text-primary font-medium mb-3 flex items-center">
                             <i class="ri-information-line mr-2"></i>
                             Before Submitting a Ticket
@@ -149,7 +149,7 @@
                         </ul>
                     </div>
                     
-                    <div class="bg-gray-50 rounded-lg p-5">
+                    <div class="bg-gray-50 rounded-lg p-5 border-gray-200 border">
                         <h4 class="text-primary font-medium mb-3 flex items-center">
                             <i class="ri-time-line mr-2"></i>
                             Response Times

@@ -15,7 +15,20 @@
             <p class="text-gray-600 mt-2 font-jost">Manage your orders, addresses, and support tickets all in one place.</p>
         </div>
 
-        <!-- Tab Navigation -->
+        <!-- Success message -->
+        @if(session('success'))
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="ri-checkbox-circle-line text-green-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">{{ session('success') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
             <div class="flex flex-wrap overflow-x-auto">
                 <a href="{{ route('profile.index') }}" class="inline-flex items-center px-6 py-4 text-primary font-medium bg-gray-50 border-b-2 border-primary">
@@ -140,7 +153,6 @@
                 </div>
             </div>
             
-            <!-- Addresses Card -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md h-full" data-aos="fade-up" data-aos-delay="300">
                 <div class="card-header border-b border-gray-200 px-6 py-5 flex justify-between items-center">
                     <div class="flex items-center">
@@ -255,6 +267,16 @@
                 @endif
             </div>
             <div class="p-6">
+                <!-- Debug info to check if tickets are available -->
+                @if(isset($user->tickets))
+                    <!-- Hidden debug info -->
+                    <div class="hidden">
+                        <p>Tickets count: {{ $user->tickets->count() }}</p>
+                        <p>Tickets empty: {{ $user->tickets->isEmpty() ? 'Yes' : 'No' }}</p>
+                        <p>User ID: {{ $user->id }}</p>
+                    </div>
+                @endif
+
                 @if(!isset($user->tickets) || $user->tickets->isEmpty())
                     <div class="text-center py-10">
                         <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">

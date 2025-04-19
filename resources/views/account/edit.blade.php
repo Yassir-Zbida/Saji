@@ -151,7 +151,7 @@
             
             <div class="p-6 md:p-8">
                 <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-gray-50 rounded-lg p-5">
+                    <div class="bg-gray-50 rounded-lg p-5 border-gray-200 border">
                         <h4 class="text-primary font-medium mb-3 flex items-center">
                             <i class="ri-information-line mr-2"></i>
                             Password Recommendations
@@ -176,7 +176,7 @@
                         </ul>
                     </div>
                     
-                    <div class="bg-gray-50 rounded-lg p-5">
+                    <div class="bg-gray-50 rounded-lg p-5 border-gray-200 border">
                         <h4 class="text-primary font-medium mb-3 flex items-center">
                             <i class="ri-error-warning-line mr-2"></i>
                             Security Best Practices
