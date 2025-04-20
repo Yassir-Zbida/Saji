@@ -100,11 +100,12 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
      Route::post('/wishlist/{id}/update-notes', [WishlistController::class, 'updateNotes'])->name('wishlist.updateNotes');
      
      Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+     Route::post('/wishlist/check-products', [WishlistController::class, 'checkProducts'])->name('wishlist.checkProducts');
+     Route::get('/wishlist/count', [WishlistController::class, 'getCount'])->name('wishlist.count');
     
 });
 
-Route::post('/wishlist/check-products', [WishlistController::class, 'checkProducts'])->name('wishlist.checkProducts');
-Route::get('/wishlist/count', [WishlistController::class, 'getCount'])->name('wishlist.count');
+
 
 
 
