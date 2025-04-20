@@ -112,8 +112,15 @@ Route::prefix('cart/ajax')->group(function () {
     Route::post('/remove/{id}', [App\Http\Controllers\AjaxCartController::class, 'removeCartItem']);
 });
 
-
-
+// Cart Routes
+Route::get('/cart', [App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/update/{id}', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/remove/{id}', [App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/clear', [App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
+Route::post('/cart/apply-coupon', [App\Http\Controllers\CartController::class, 'applyCoupon'])->name('cart.apply-coupon');
+Route::post('/cart/ajax/clear', [App\Http\Controllers\AjaxCartController::class, 'clearCart']);
+Route::post('/cart/ajax/apply-coupon', [App\Http\Controllers\AjaxCartController::class, 'applyCoupon']);
+Route::post('/cart/ajax/remove-coupon', [App\Http\Controllers\AjaxCartController::class, 'removeCoupon'])->name('cart.ajax.remove-coupon');
 
 
 

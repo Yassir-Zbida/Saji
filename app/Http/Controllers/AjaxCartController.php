@@ -6,6 +6,7 @@ use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use Illuminate\Http\Request;
+use App\Models\Coupon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
@@ -277,6 +278,9 @@ class AjaxCartController extends Controller
      * Format cart data for JSON response
      */
 
+    /**
+     * Format cart data for JSON response
+     */
     private function formatCartData($cartItems)
     {
         $items = [];
@@ -307,12 +311,6 @@ class AjaxCartController extends Controller
                 $imagePath = asset('images/placeholder.jpg');
             }
 
-            // Get category name
-            $categoryName = null;
-            if ($product->category) {
-                $categoryName = $product->category->name;
-            }
-
             // Calculate item total
             $itemTotal = $price * $item->quantity;
             $subtotal += $itemTotal;
@@ -322,7 +320,7 @@ class AjaxCartController extends Controller
                 'id' => $item->id,
                 'product_id' => $product->id,
                 'name' => $product->name,
-                'category_name' => $categoryName,
+                'category_name' => $product->category ? $product->category->name : null,
                 'variation_id' => $variation ? $variation->id : null,
                 'variation_name' => $variationName,
                 'price' => $price,
@@ -334,9 +332,16 @@ class AjaxCartController extends Controller
             ];
         }
 
+        // Include coupon discount if available
+        $discount = Session::get('coupon_discount', 0);
+        $coupon_code = Session::get('coupon_code');
+
         return [
             'items' => $items,
             'subtotal' => $subtotal,
+            'discount' => $discount,
+            'coupon_code' => $coupon_code,
+            'total' => $subtotal - $discount,
             'item_count' => count($items),
             'total_quantity' => $cartItems->sum('quantity'),
         ];
@@ -356,4 +361,119 @@ class AjaxCartController extends Controller
             return $cartItem->session_id == $sessionId;
         }
     }
+
+    public function clearCart()
+    {
+        $userId = Auth::id();
+        $sessionId = Session::getId();
+
+        if ($userId) {
+            CartItem::where('user_id', $userId)->delete();
+        } else {
+            CartItem::where('session_id', $sessionId)->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cart cleared successfully.',
+        ]);
+    }
+
+
+    /**
+     * Apply a coupon code to the cart.
+     */
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string',
+        ]);
+
+        $couponCode = strtoupper($request->coupon_code);
+
+        // Find valid coupon
+        $coupon = Coupon::where('code', $couponCode)
+            ->valid()
+            ->first();
+
+        if (!$coupon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired coupon code.',
+            ]);
+        }
+
+        // Get cart items and calculate subtotal
+        $cartItems = $this->getCartItems();
+        $subtotal = $this->calculateSubtotal($cartItems);
+
+        // Check minimum spend
+        if ($coupon->minimum_spend && $subtotal < $coupon->minimum_spend) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your order does not meet the minimum spend for this coupon. Minimum spend: $' . number_format($coupon->minimum_spend, 2),
+            ]);
+        }
+
+        // Calculate discount
+        $discount = $coupon->calculateDiscount($subtotal);
+
+        // Store coupon information in session
+        Session::put('coupon_code', $coupon->code);
+        Session::put('coupon_discount', $discount);
+        Session::put('coupon_id', $coupon->id);
+
+        // Format cart data with discount
+        $formattedCart = $this->formatCartData($cartItems);
+        $formattedCart['discount'] = $discount;
+        $formattedCart['coupon_code'] = $coupon->code;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon applied successfully.',
+            'cart' => $formattedCart,
+        ]);
+    }
+
+    private function calculateSubtotal($cartItems)
+    {
+        $subtotal = 0;
+
+        foreach ($cartItems as $item) {
+            $product = $item->product;
+            $variation = $item->productVariation;
+
+            // Determine price
+            if ($variation) {
+                $price = $variation->sale_price ?? $variation->price;
+            } else {
+                $price = $product->sale_price ?? $product->price;
+            }
+
+            // Calculate item total and add to subtotal
+            $itemTotal = $price * $item->quantity;
+            $subtotal += $itemTotal;
+        }
+
+        return $subtotal;
+    }
+
+    public function removeCoupon()
+    {
+        // Remove coupon data from session
+        Session::forget('coupon_code');
+        Session::forget('coupon_discount');
+        Session::forget('coupon_id');
+
+        // Return updated cart data
+        $cartItems = $this->getCartItems();
+        $formattedCart = $this->formatCartData($cartItems);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon removed successfully.',
+            'cart' => $formattedCart,
+        ]);
+    }
+
 }
