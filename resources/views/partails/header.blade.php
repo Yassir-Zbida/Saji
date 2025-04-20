@@ -29,7 +29,7 @@
                 <i class="ri-menu-line text-2xl"></i>
             </button>
             
-            <a href="#" class="flex items-center">
+            <a href="/" class="flex items-center">
                 <span class="font-jakarta text-2xl tracking-wider font-semibold">SAJI HOME</span>
             </a>
             
@@ -38,8 +38,8 @@
                 <i class="ri-search-line search-icon text-gray-400 group-hover:text-gray-600 transition-all"></i>
             </div>
             
-            <div class="flex items-center space-x-4">
-                <a href="{{ route('wishlist.index') }}" class="wishlist-nav-link hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white relative">
+            <div class="flex items-center">
+                <a href="{{ route('wishlist.index') }}" class="mx-4 wishlist-nav-link hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white relative">
                     <i class="ri-heart-line text-xl transition-transform"></i>
                     @if(Auth::check() && Auth::user()->wishlistItems->count() > 0)
                         <span class="wishlist-count absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
@@ -48,7 +48,7 @@
                     @endif
                 </a>
                 
-                <a href="{{ Auth::check() ? (Auth::user()->isAdmin() || Auth::user()->isManager() || Auth::user()->isSupportAgent() ? route('dashboard') : '/account') : '/login' }}" class="account-btn hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white ">
+                <a href="{{ Auth::check() ? (Auth::user()->isAdmin() || Auth::user()->isManager() || Auth::user()->isSupportAgent() ? route('dashboard') : '/account') : '/login' }}" class="mr-4 account-btn hidden md:flex items-center justify-center w-10 h-10 border border-black transition rounded-md hover:bg-black hover:text-white ">
                     <i class="ri-user-line text-xl transition-transform"></i>
                 </a>
                 
