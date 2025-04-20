@@ -90,7 +90,6 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
      Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
      Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 
-     
      Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
      Route::post('/wishlist/add', [WishlistController::class, 'add'])->name('wishlist.add');
      Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
@@ -104,6 +103,16 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
      Route::get('/wishlist/count', [WishlistController::class, 'getCount'])->name('wishlist.count');
     
 });
+
+// AJAX Cart Routes
+Route::prefix('cart/ajax')->group(function () {
+    Route::get('/get', [App\Http\Controllers\AjaxCartController::class, 'getCart']);
+    Route::post('/add', [App\Http\Controllers\AjaxCartController::class, 'addToCart']);
+    Route::post('/update/{id}', [App\Http\Controllers\AjaxCartController::class, 'updateCartItem']);
+    Route::post('/remove/{id}', [App\Http\Controllers\AjaxCartController::class, 'removeCartItem']);
+});
+
+
 
 
 

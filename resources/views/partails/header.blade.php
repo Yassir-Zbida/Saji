@@ -241,35 +241,458 @@
         </button>
     </div>
     
-    <div class="flex-1 flex flex-col items-center justify-center p-4">
-        
-        <h3 class="font-jost font-medium mb-1 px-4">Your cart is empty</h3>
-        <p class="text-sm text-gray-500 text-center mb-6 font-jost mx-14">It seems you haven't added any products to your cart yet.</p>
-        
+    <div class="flex-1 overflow-y-auto cart-items-container">
+        <div class="flex flex-col items-center justify-center p-4 h-full">
+            <h3 class="font-jost font-medium mb-1 px-4">Your cart is empty</h3>
+            <p class="text-sm text-gray-500 text-center mb-6 font-jost mx-14">It seems you haven't added any products to your cart yet.</p>
+        </div>
     </div>
     
-    <div class="p-4 border-t border-gray-100">
-        <div class="flex justify-between mb-4 font-jost">
-            <span>Subtotal</span>
-            <span class="font-medium">0.00 $</span>
+    <div class="sticky bottom-0 bg-white p-4 border-t border-gray-100 mt-auto">
+        <div class="flex justify-between items-center mb-4 font-jost">
+            <span class="font-medium">Subtotal</span>
+            <span class="font-bold text-lg">0.00 $</span>
         </div>
-        <button class="w-full bg-black text-white py-3 rounded-md hover:opacity-80 transition font-jost">
-            Checkout
-        </button>
-        <button class="w-full border border-black py-2 mt-2 rounded-md hover:bg-black hover:text-white transition-all duration-300 font-jost">
-            View Cart
-        </button>
+        <div class="flex flex-col gap-2">
+            <a href="/checkout" class="block w-full bg-black text-white py-3 rounded-md hover:opacity-80 transition font-jost text-center">
+                Checkout
+            </a>
+            <a href="/cart" class="block w-full border border-black py-2 rounded-md hover:bg-black hover:text-white transition-all duration-300 font-jost text-center">
+                View Cart
+            </a>
+        </div>
     </div>
 </div>
 
-<div id="overlay" class="overlay fixed inset-0 bg-black z-30 hidden"></div>
+<div id="overlay" class="overlay fixed inset-0 bg-black opacity-50 z-30 hidden"></div>
 
-@push('scripts')
+<style>
+.cart-sidebar {
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-sidebar:not(.hidden) {
+    transform: translateX(0);
+}
+
+.cart-items-container {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+.cart-items-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cart-items-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.cart-items-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.cart-items-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.cart-item {
+    transition: background-color 0.2s;
+}
+
+.cart-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.cart-qty-btn {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cart-qty-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.remove-cart-item {
+    transition: color 0.2s;
+}
+
+.remove-cart-item:hover {
+    color: #f44336;
+}
+
+@keyframes cartItemAdded {
+    0% {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    50% {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.cart-item-added {
+    animation: cartItemAdded 1s ease-out;
+}
+
+.toast-container {
+    z-index: 9999;
+}
+
+.toast {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s;
+}
+
+.add-to-cart-btn.loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+</style>
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        @if(Auth::check())
-            document.body.classList.add('logged-in');
-        @endif
+    initCartFunctionality();
+    
+    
+    function initCartFunctionality() {
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        addToCartButtons.forEach(btn => {
+            btn.addEventListener('click', handleAddToCart);
+        });
+        
+        const cartToggleBtn = document.getElementById('cartToggle');
+        const closeCartBtn = document.getElementById('closeCart');
+        const overlay = document.getElementById('overlay');
+        
+        if (cartToggleBtn) {
+            cartToggleBtn.addEventListener('click', toggleCartSidebar);
+        }
+        
+        if (closeCartBtn) {
+            closeCartBtn.addEventListener('click', closeCartSidebar);
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', closeCartSidebar);
+        }
+        
+        loadCartData();
+    }
+    
+    
+    function handleAddToCart(e) {
+        e.preventDefault();
+        
+        const btn = e.currentTarget;
+        const productCard = btn.closest('.product-card');
+        
+        if (!productCard) {
+            console.error('Product card not found');
+            showToast('Error adding product to cart', 'error');
+            return;
+        }
+        
+        const productId = productCard.getAttribute('data-product-id');
+        if (!productId) {
+            console.error('Product ID not found');
+            showToast('Error adding product to cart', 'error');
+            return;
+        }
+        
+        btn.innerHTML = '<span class="flex justify-center items-center"><i class="ri-loader-4-line animate-spin mr-2"></i>Adding...</span>';
+        btn.disabled = true;
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('quantity', 1); 
+        
+        fetch('/cart/ajax/add', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.innerHTML = 'Add to Cart';
+            btn.disabled = false;
+            
+            if (data.success) {
+                showToast('Product added to cart', 'success');
+                updateCartDisplay(data.cart);
+                
+                toggleCartSidebar();
+            } else {
+                showToast(data.message || 'Error adding product to cart', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding to cart:', error);
+            btn.innerHTML = 'Add to Cart';
+            btn.disabled = false;
+            showToast('Error adding product to cart', 'error');
+        });
+    }
+    
+    function loadCartData() {
+        fetch('/cart/ajax/get', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCartDisplay(data.cart);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading cart data:', error);
+        });
+    }
+    
+    /**
+     * Update cart quantity
+     */
+    function updateCartQuantity(itemId, newQuantity) {
+        if (newQuantity < 1) return;
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const formData = new FormData();
+        formData.append('quantity', newQuantity);
+        
+        fetch(`/cart/ajax/update/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCartDisplay(data.cart);
+                showToast('Cart updated', 'success');
+            } else {
+                showToast(data.message || 'Error updating cart', 'error');
+                loadCartData();
+            }
+        })
+        .catch(error => {
+            console.error('Error updating cart:', error);
+            showToast('Error updating cart', 'error');
+            loadCartData();
+        });
+    }
+    
+    /**
+     * Remove item from cart
+     */
+    function removeCartItem(itemId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch(`/cart/ajax/remove/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCartDisplay(data.cart);
+                showToast('Item removed from cart', 'success');
+            } else {
+                showToast(data.message || 'Error removing item', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error removing item:', error);
+            showToast('Error removing item', 'error');
+        });
+    }
+    
+    /**
+     * Update the cart display
+     */
+
+function updateCartDisplay(cart) {
+    const cartBtnTotal = document.querySelector('.cart-btn span');
+    if (cartBtnTotal) {
+        const currencySymbol = cartBtnTotal.textContent.trim().charAt(cartBtnTotal.textContent.trim().length - 1);
+        cartBtnTotal.textContent = `${cart.subtotal.toFixed(2)} ${currencySymbol}`;
+    }
+    
+    const cartSidebar = document.getElementById('cartSidebar');
+    if (!cartSidebar) return;
+    
+    const cartContent = cartSidebar.querySelector('.cart-items-container');
+    if (!cartContent) return;
+    
+    const cartSubtotal = cartSidebar.querySelector('.sticky.bottom-0 .flex.justify-between span:last-child');
+    if (cartSubtotal) {
+        cartSubtotal.textContent = `${cart.subtotal.toFixed(2)} $`;
+    }
+    
+    if (cart.items.length === 0) {
+        cartContent.innerHTML = `
+            <div class="flex flex-col items-center justify-center p-4 h-full">
+                <h3 class="font-jost font-medium mb-1 px-4">Your cart is empty</h3>
+                <p class="text-sm text-gray-500 text-center mb-6 font-jost mx-14">It seems you haven't added any products to your cart yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let cartItemsHtml = `<div class="p-4">`;
+    
+    cart.items.forEach(item => {
+        const price = item.sale_price ?? item.price;
+        const totalPrice = price * item.quantity;
+        
+        const imagePath = item.image_path && item.image_path !== 'null' ? 
+            item.image_path : 
+            '/images/placeholder.jpg';
+            
+        const categoryName = item.category_name || '';
+        
+        cartItemsHtml += `
+            <div class="cart-item flex border-b border-gray-100 pb-4 mb-4 rounded-lg p-2" data-item-id="${item.id}">
+                <div class="w-20 h-20 bg-gray-50 rounded-md overflow-hidden flex-shrink-0">
+                    <img src="${imagePath}" alt="${item.name}" class="w-full h-full object-cover" 
+                        onerror="this.onerror=null; this.src='/images/placeholder.jpg';">
+                </div>
+                <div class="ml-4 flex-1">
+                    <div class="flex justify-between">
+                        <div>
+                            <h4 class="font-medium text-sm">${item.name}</h4>
+                            <p class="text-xs text-gray-500">${categoryName}</p>
+                        </div>
+                        <button class="remove-cart-item text-gray-400 hover:text-red-500 transition-colors" onclick="removeCartItem(${item.id})">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+                    ${item.variation_name ? `<p class="text-xs text-gray-500 mb-2">${item.variation_name}</p>` : ''}
+                    <div class="flex justify-between items-center mt-2">
+                        <div class="flex items-center border border-gray-200 rounded-md">
+                            <button class="cart-qty-btn px-2 py-1 text-sm" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                            <span class="px-2 py-1 text-sm">${item.quantity}</span>
+                            <button class="cart-qty-btn px-2 py-1 text-sm" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                        </div>
+                        <span class="font-medium text-sm">${totalPrice.toFixed(2)} $</span>
+                    </div>
+                </div>
+            </div>
+        `;
     });
+    
+    cartItemsHtml += `</div>`;
+    cartContent.innerHTML = cartItemsHtml;
+    
+    window.updateCartQuantity = updateCartQuantity;
+    window.removeCartItem = removeCartItem;
+}
+    
+    
+    function toggleCartSidebar() {
+        const cartSidebar = document.getElementById('cartSidebar');
+        const overlay = document.getElementById('overlay');
+        
+        if (cartSidebar && overlay) {
+            cartSidebar.classList.toggle('hidden');
+            overlay.classList.toggle('hidden');
+            
+            if (!cartSidebar.classList.contains('hidden')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+    }
+    
+    
+    function closeCartSidebar() {
+        const cartSidebar = document.getElementById('cartSidebar');
+        const overlay = document.getElementById('overlay');
+        
+        if (cartSidebar && overlay) {
+            cartSidebar.classList.add('hidden');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+    
+    
+    function showToast(message, type = 'info') {
+        let toastContainer = document.querySelector('.toast-container');
+
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container fixed bottom-4 right-4 z-50';
+            document.body.appendChild(toastContainer);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast p-4 mb-3 rounded-lg shadow-lg flex items-center justify-between transition-all transform translate-y-2 opacity-0`;
+
+        switch (type) {
+            case 'success':
+                toast.classList.add('bg-green-500', 'text-white');
+                break;
+            case 'error':
+                toast.classList.add('bg-red-500', 'text-white');
+                break;
+            case 'info':
+                toast.classList.add('bg-blue-500', 'text-white');
+                break;
+            default:
+                toast.classList.add('bg-gray-800', 'text-white');
+        }
+
+        toast.innerHTML = `
+            <span>${message}</span>
+            <button class="ml-4 focus:outline-none" onclick="this.parentElement.remove()">
+                <i class="ri-close-line"></i>
+            </button>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove('translate-y-2', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+        }, 10);
+
+        setTimeout(() => {
+            toast.classList.add('translate-y-2', 'opacity-0');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 4000);
+    }
+    
+    window.showToast = showToast;
+    window.toggleCartSidebar = toggleCartSidebar;
+    window.closeCartSidebar = closeCartSidebar;
+    window.updateCartQuantity = updateCartQuantity;
+    window.removeCartItem = removeCartItem;
+});
 </script>
-@endpush

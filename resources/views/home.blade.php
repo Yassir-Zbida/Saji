@@ -3,6 +3,7 @@
 
 @section('content')
     @include('partails.hero')
+    {{-- @include('partails.ajax') --}}
     @include('partails.products') 
     @include('partails.features')
     @include('partails.eyes')    
