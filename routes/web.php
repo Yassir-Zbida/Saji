@@ -125,7 +125,6 @@ Route::post('/cart/ajax/remove-coupon', [App\Http\Controllers\AjaxCartController
 
 
 
-
 // Shop Routes (Public)
 // Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 // Route::get('/shop/filter', [ShopController::class, 'filter'])->name('shop.filter');

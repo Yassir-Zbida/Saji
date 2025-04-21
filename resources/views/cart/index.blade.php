@@ -317,12 +317,15 @@
 
             // Apply coupon
             if (e.target.id === 'apply-coupon') {
-                const couponCode = document.getElementById('coupon-code').value.trim();
-
-                if (couponCode) {
-                    applyCoupon(couponCode);
+                if (e.target.classList.contains('remove-coupon')) {
+                    removeCoupon();
                 } else {
-                    showToast('Please enter a coupon code', 'error');
+                    const couponCode = document.getElementById('coupon-code').value.trim();
+                    if (couponCode) {
+                        applyCoupon(couponCode);
+                    } else {
+                        showToast('Please enter a coupon code', 'error');
+                    }
                 }
             }
         });
@@ -388,7 +391,34 @@
             // Update cart totals
             cartContent.querySelector('.cart-subtotal').textContent =
                 `$${parseFloat(cart.subtotal).toFixed(2)}`;
-            cartContent.querySelector('.cart-total').textContent = `$${parseFloat(cart.subtotal).toFixed(2)}`;
+            
+            // Handle discount display
+            const discountRow = cartContent.querySelector('#discount-row');
+            if (cart.discount && cart.discount > 0) {
+                discountRow.classList.remove('hidden');
+                cartContent.querySelector('.cart-discount').textContent = `-$${parseFloat(cart.discount).toFixed(2)}`;
+            } else {
+                discountRow.classList.add('hidden');
+            }
+            
+            // Update total (should be subtotal - discount)
+            cartContent.querySelector('.cart-total').textContent = `$${parseFloat(cart.total).toFixed(2)}`;
+
+            // Display coupon code if applied
+            if (cart.coupon_code) {
+                const couponInput = cartContent.querySelector('#coupon-code');
+                if (couponInput) {
+                    couponInput.value = cart.coupon_code;
+                    couponInput.setAttribute('disabled', 'disabled');
+                    
+                    // Change apply button to "Remove" button
+                    const applyButton = cartContent.querySelector('#apply-coupon');
+                    if (applyButton) {
+                        applyButton.textContent = 'Remove';
+                        applyButton.classList.add('remove-coupon');
+                    }
+                }
+            }
 
             // Add cart items
             const cartItemsList = cartContent.querySelector('.cart-items-list');
@@ -464,7 +494,7 @@
                 }, 50 + (index * 50));
             });
 
-            updateHeaderCartTotal(cart.subtotal);
+            updateHeaderCartTotal(cart.total); // Use total instead of subtotal
         }
 
         /**
@@ -482,7 +512,6 @@
          * Update cart item quantity
          */
         function updateCartItem(itemId, quantity) {
-            // Get CSRF token
             const formData = new FormData();
             formData.append('quantity', quantity);
 
@@ -500,19 +529,18 @@
                         loadCart();
                         showToast('Cart updated', 'success');
 
-                        // Update header cart total
-                        if (data.cart && data.cart.subtotal !== undefined) {
-                            updateHeaderCartTotal(data.cart.subtotal);
+                        if (data.cart && data.cart.total !== undefined) {
+                            updateHeaderCartTotal(data.cart.total);
                         }
                     } else {
                         showToast(data.message || 'Error updating cart', 'error');
-                        loadCart(); // Reload to reset UI
+                        loadCart();
                     }
                 })
                 .catch(error => {
                     console.error('Error updating cart:', error);
                     showToast('Error updating cart', 'error');
-                    loadCart(); // Reload to reset UI
+                    loadCart(); 
                 });
         }
 
@@ -561,7 +589,6 @@
                         renderEmptyCart();
                         showToast('Cart cleared', 'success');
 
-                        // Update header cart total to zero
                         updateHeaderCartTotal(0);
                     } else {
                         showToast(data.message || 'Error clearing cart', 'error');
@@ -573,17 +600,13 @@
                 });
         }
 
-        function updateHeaderCartTotal(subtotal) {
-            // Find the cart button in header
+        function updateHeaderCartTotal(total) {
             const headerCartTotal = document.querySelector('header .cart-btn span');
 
             if (headerCartTotal) {
-                // Extract currency symbol
-                const currencySymbol = headerCartTotal.textContent.trim().charAt(headerCartTotal.textContent
-                    .trim().length - 1);
+                const currencySymbol = headerCartTotal.textContent.trim().charAt(0);
 
-                // Update the header cart total
-                headerCartTotal.textContent = `${parseFloat(subtotal).toFixed(2)} ${currencySymbol}`;
+                headerCartTotal.textContent = `${currencySymbol}${parseFloat(total).toFixed(2)}`;
             }
         }
 
@@ -614,6 +637,33 @@
                 .catch(error => {
                     console.error('Error applying coupon:', error);
                     showToast('Error applying coupon', 'error');
+                });
+        }
+
+        /**
+         * Remove coupon
+         */
+        function removeCoupon() {
+            fetch('/cart/ajax/remove-coupon', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadCart();
+                        showToast('Coupon removed successfully', 'success');
+                    } else {
+                        showToast(data.message || 'Error removing coupon', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing coupon:', error);
+                    showToast('Error removing coupon', 'error');
+                    loadCart();
                 });
         }
 
@@ -664,4 +714,22 @@
             }, 4000);
         }
     });
+</script>
+
+<script>
+    
+    window.renderCart = renderCart;
+    
+    document.addEventListener('headerCartUpdated', function(event) {
+        console.log('Cart update detected from header sidebar');
+        if (event.detail) {
+            console.log('Rendering cart with data from event');
+            renderCart(event.detail);
+        } else {
+            console.log('No cart data in event, loading from server');
+            loadCart();
+        }
+    });
+    
+    console.log('Cart page update listener initialized');
 </script>

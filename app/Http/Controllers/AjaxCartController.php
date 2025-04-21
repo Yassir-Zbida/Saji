@@ -277,10 +277,6 @@ class AjaxCartController extends Controller
     /**
      * Format cart data for JSON response
      */
-
-    /**
-     * Format cart data for JSON response
-     */
     private function formatCartData($cartItems)
     {
         $items = [];
@@ -362,6 +358,9 @@ class AjaxCartController extends Controller
         }
     }
 
+    /**
+     * Clear cart
+     */
     public function clearCart()
     {
         $userId = Auth::id();
@@ -373,12 +372,14 @@ class AjaxCartController extends Controller
             CartItem::where('session_id', $sessionId)->delete();
         }
 
+        // Also clear any coupon data
+        Session::forget(['coupon_code', 'coupon_discount', 'coupon_id']);
+
         return response()->json([
             'success' => true,
             'message' => 'Cart cleared successfully.',
         ]);
     }
-
 
     /**
      * Apply a coupon code to the cart.
@@ -425,8 +426,6 @@ class AjaxCartController extends Controller
 
         // Format cart data with discount
         $formattedCart = $this->formatCartData($cartItems);
-        $formattedCart['discount'] = $discount;
-        $formattedCart['coupon_code'] = $coupon->code;
 
         return response()->json([
             'success' => true,
@@ -435,29 +434,9 @@ class AjaxCartController extends Controller
         ]);
     }
 
-    private function calculateSubtotal($cartItems)
-    {
-        $subtotal = 0;
-
-        foreach ($cartItems as $item) {
-            $product = $item->product;
-            $variation = $item->productVariation;
-
-            // Determine price
-            if ($variation) {
-                $price = $variation->sale_price ?? $variation->price;
-            } else {
-                $price = $product->sale_price ?? $product->price;
-            }
-
-            // Calculate item total and add to subtotal
-            $itemTotal = $price * $item->quantity;
-            $subtotal += $itemTotal;
-        }
-
-        return $subtotal;
-    }
-
+    /**
+     * Remove a coupon from the cart.
+     */
     public function removeCoupon()
     {
         // Remove coupon data from session
@@ -476,4 +455,29 @@ class AjaxCartController extends Controller
         ]);
     }
 
+    /**
+     * Calculate subtotal for cart items
+     */
+    private function calculateSubtotal($cartItems)
+    {
+        $subtotal = 0;
+        
+        foreach ($cartItems as $item) {
+            $product = $item->product;
+            $variation = $item->productVariation;
+            
+            // Determine price
+            if ($variation) {
+                $price = $variation->sale_price ?? $variation->price;
+            } else {
+                $price = $product->sale_price ?? $product->price;
+            }
+            
+            // Calculate item total and add to subtotal
+            $itemTotal = $price * $item->quantity;
+            $subtotal += $itemTotal;
+        }
+        
+        return $subtotal;
+    }
 }
