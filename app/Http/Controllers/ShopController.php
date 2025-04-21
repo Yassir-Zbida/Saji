@@ -13,79 +13,123 @@ class ShopController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::where('is_active', 1)
-            ->with('category')
-            ->paginate(12);
+        // Get products with pagination
+        $query = Product::where('is_active', 1)
+            ->with('category', 'images');
+            
+        // Check if we're filtering for featured products
+        if ($request->has('featured')) {
+            $query->where('featured', 1);
+        }
+        
+        // Apply sorting (default: newest first)
+        $sort = $request->get('sort', 'newest');
+        
+        switch ($sort) {
+            case 'price-low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price-high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'name-asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name-desc':
+                $query->orderBy('name', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+        
+        $products = $query->paginate(12);
 
         // Get featured products
         $featuredProducts = Product::where('is_active', 1)
-            ->where('featured', 1) // Make sure you have this column in your products table
+            ->where('featured', 1)
+            ->with('category', 'images')
             ->limit(8)
             ->get();
-                
             
-        return view('shop.index', compact('products', 'featuredProducts'));
-
+        // Get all categories with product count
+        $categories = Category::withCount('products')
+            ->orderBy('name')
+            ->get();
+                
+        return view('shop.index', compact('products', 'featuredProducts', 'categories', 'sort'));
     }
     
     /**
      * Filter products based on criteria.
      */
-    public function filter(Request $request)
-    {
-        $query = Product::where('is_active', 1);
-        
-        // Apply category filter
-        if ($request->has('category')) {
-            $query->whereIn('category_id', $request->category);
-        }
-        
-        // Apply price range filter
-        if ($request->has('min_price') && $request->has('max_price')) {
-            $query->whereBetween('price', [$request->min_price, $request->max_price]);
-        }
-        
-        // Apply sorting
-        if ($request->has('sort')) {
-            switch ($request->sort) {
-                case 'price-low':
-                    $query->orderBy('price', 'asc');
-                    break;
-                case 'price-high':
-                    $query->orderBy('price', 'desc');
-                    break;
-                case 'newest':
-                    $query->orderBy('created_at', 'desc');
-                    break;
-                case 'name-asc':
-                    $query->orderBy('name', 'asc');
-                    break;
-                case 'name-desc':
-                    $query->orderBy('name', 'desc');
-                    break;
-                default:
-                    $query->orderBy('created_at', 'desc');
-            }
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
-        
-        $products = $query->with('category')->paginate(12);
-        
-        return view('shop', compact('products'));
+    /**
+ * Filter products based on criteria.
+ */
+public function filter(Request $request)
+{
+    $query = Product::where('is_active', 1)
+        ->with('category', 'images');
+    
+    // Apply category filter
+    if ($request->has('category') && is_array($request->category)) {
+        $query->whereIn('category_id', $request->category);
     }
+    
+    // Apply price range filter - FIXED VERSION
+    if ($request->has('min_price') && $request->min_price !== null && $request->min_price !== '') {
+        $query->where('price', '>=', (float) $request->min_price);
+    }
+    
+    if ($request->has('max_price') && $request->max_price !== null && $request->max_price !== '') {
+        $query->where('price', '<=', (float) $request->max_price);
+    }
+    
+    // Apply sorting
+    $sort = $request->get('sort', 'newest');
+    switch ($sort) {
+        case 'price-low':
+            $query->orderBy('price', 'asc');
+            break;
+        case 'price-high':
+            $query->orderBy('price', 'desc');
+            break;
+        case 'name-asc':
+            $query->orderBy('name', 'asc');
+            break;
+        case 'name-desc':
+            $query->orderBy('name', 'desc');
+            break;
+        default:
+            $query->orderBy('created_at', 'desc');
+    }
+    
+    $products = $query->paginate(12)->appends($request->all());
+    
+    // Get all categories with product count
+    $categories = Category::withCount('products')
+        ->orderBy('name')
+        ->get();
+        
+    // Get featured products
+    $featuredProducts = Product::where('is_active', 1)
+        ->where('featured', 1)
+        ->with('category', 'images')
+        ->limit(4)
+        ->get();
+    
+    return view('shop.index', compact('products', 'categories', 'featuredProducts', 'sort'));
+}
     
     /**
      * Display all categories.
      */
     public function categories()
     {
-        $categories = Category::where('parent_id', null)
-            ->withCount('products')
+        $categories = Category::withCount('products')
             ->orderBy('name')
             ->get();
             
-        return view('categories', compact('categories'));
+        return view('shop.categories', compact('categories'));
     }
     
     /**
@@ -97,9 +141,15 @@ class ShopController extends Controller
         
         $products = Product::where('is_active', 1)
             ->where('category_id', $category->id)
+            ->with('category', 'images')
             ->paginate(12);
             
-        return view('category', compact('category', 'products'));
+        // Get all categories with product count for the sidebar
+        $categories = Category::withCount('products')
+            ->orderBy('name')
+            ->get();
+            
+        return view('shop.index', compact('products', 'categories', 'category'));
     }
     
     /**
@@ -116,6 +166,7 @@ class ShopController extends Controller
         $relatedProducts = Product::where('is_active', 1)
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
+            ->with('category', 'images')
             ->limit(4)
             ->get();
             
@@ -127,7 +178,9 @@ class ShopController extends Controller
      */
     public function quickView(Request $request)
     {
-        $product = Product::findOrFail($request->product_id);
+        $product = Product::where('id', $request->product_id)
+            ->with(['category', 'images'])
+            ->firstOrFail();
         
         return view('partials.product-quick-view', compact('product'));
     }

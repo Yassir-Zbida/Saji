@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container mx-auto px-4 py-12 md:px-12 mb-12">
+    <div class="container py-12 md:px-12 mb-12">
         <div class="mb-8">
             <h1 class="text-3xl font-medium text-primary mb-2 font-jost">My Cart</h1>
             <p class="text-gray-600">Items you're ready to purchase</p>
@@ -9,7 +9,6 @@
 
         <div class="bg-white rounded-lg shadow-soft p-6 pb-12 border border-gray-200">
             <div id="cartContainer">
-                <!-- Cart will be loaded here via AJAX -->
                 <div class="flex justify-center p-8">
                     <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full border-t-transparent"
                         role="status">

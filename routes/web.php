@@ -122,6 +122,14 @@ Route::post('/cart/ajax/clear', [App\Http\Controllers\AjaxCartController::class,
 Route::post('/cart/ajax/apply-coupon', [App\Http\Controllers\AjaxCartController::class, 'applyCoupon']);
 Route::post('/cart/ajax/remove-coupon', [App\Http\Controllers\AjaxCartController::class, 'removeCoupon'])->name('cart.ajax.remove-coupon');
 
+// Shop Routes
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/shop/filter', [ShopController::class, 'filter'])->name('shop.filter');
+Route::get('/shop/categories', [ShopController::class, 'categories'])->name('shop.categories');
+Route::get('/shop/category/{slug}', [ShopController::class, 'category'])->name('shop.category');
+Route::get('/product/{slug}', [ShopController::class, 'product'])->name('shop.product');
+Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop.quick-view');
+
 
 
 
@@ -218,3 +226,5 @@ Route::fallback(function () {
 Route::get('/403', function () {
     return view('errors.403');
 })->name('forbidden');
+
+
