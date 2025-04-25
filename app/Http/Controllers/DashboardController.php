@@ -27,30 +27,30 @@ class DashboardController extends Controller
         $pendingOrders = Order::where('status', 'pending')->count();
         $totalCustomers = User::where('role', 'customer')->count();
         $openTickets = SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
-        
+
         // Calcul des pourcentages de croissance pour les statistiques
         $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
         $currentMonthStart = Carbon::now()->startOfMonth();
-        
+
         // Croissance des produits
         $lastMonthProducts = Product::where('created_at', '>=', $lastMonthStart)
             ->where('created_at', '<=', $lastMonthEnd)
             ->count();
         $currentMonthProducts = Product::where('created_at', '>=', $currentMonthStart)->count();
-        $productGrowth = $lastMonthProducts > 0 
-            ? round(($currentMonthProducts - $lastMonthProducts) / $lastMonthProducts * 100) 
+        $productGrowth = $lastMonthProducts > 0
+            ? round(($currentMonthProducts - $lastMonthProducts) / $lastMonthProducts * 100)
             : 0;
-        
+
         // Croissance des commandes
         $lastMonthOrders = Order::where('created_at', '>=', $lastMonthStart)
             ->where('created_at', '<=', $lastMonthEnd)
             ->count();
         $currentMonthOrders = Order::where('created_at', '>=', $currentMonthStart)->count();
-        $orderGrowth = $lastMonthOrders > 0 
-            ? round(($currentMonthOrders - $lastMonthOrders) / $lastMonthOrders * 100) 
+        $orderGrowth = $lastMonthOrders > 0
+            ? round(($currentMonthOrders - $lastMonthOrders) / $lastMonthOrders * 100)
             : 0;
-        
+
         // Croissance des clients
         $lastMonthCustomers = User::where('role', 'customer')
             ->where('created_at', '>=', $lastMonthStart)
@@ -59,23 +59,23 @@ class DashboardController extends Controller
         $currentMonthCustomers = User::where('role', 'customer')
             ->where('created_at', '>=', $currentMonthStart)
             ->count();
-        $customerGrowth = $lastMonthCustomers > 0 
-            ? round(($currentMonthCustomers - $lastMonthCustomers) / $lastMonthCustomers * 100) 
+        $customerGrowth = $lastMonthCustomers > 0
+            ? round(($currentMonthCustomers - $lastMonthCustomers) / $lastMonthCustomers * 100)
             : 0;
-        
+
         // Croissance des tickets
         $lastWeekStart = Carbon::now()->subWeek()->startOfWeek();
         $lastWeekEnd = Carbon::now()->subWeek()->endOfWeek();
         $currentWeekStart = Carbon::now()->startOfWeek();
-        
+
         $lastWeekTickets = SupportTicket::where('created_at', '>=', $lastWeekStart)
             ->where('created_at', '<=', $lastWeekEnd)
             ->count();
         $currentWeekTickets = SupportTicket::where('created_at', '>=', $currentWeekStart)->count();
-        $ticketGrowth = $lastWeekTickets > 0 
-            ? round(($currentWeekTickets - $lastWeekTickets) / $lastWeekTickets * 100) 
+        $ticketGrowth = $lastWeekTickets > 0
+            ? round(($currentWeekTickets - $lastWeekTickets) / $lastWeekTickets * 100)
             : 0;
-        
+
         // Nouveaux clients cette semaine
         $newCustomersThisWeek = User::where('role', 'customer')
             ->where('created_at', '>=', $currentWeekStart)
@@ -127,7 +127,7 @@ class DashboardController extends Controller
     {
         $topProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->leftJoin('product_images', function($join) {
+            ->leftJoin('product_images', function ($join) {
                 $join->on('products.id', '=', 'product_images.product_id')
                     ->whereRaw('product_images.id = (SELECT MIN(id) FROM product_images WHERE product_id = products.id)');
             })
@@ -144,7 +144,7 @@ class DashboardController extends Controller
             ->get();
 
         // Format image URLs
-        $topProducts = $topProducts->map(function($product) {
+        $topProducts = $topProducts->map(function ($product) {
             if ($product->image) {
                 $product->image = asset('storage/' . $product->image);
             }
@@ -178,30 +178,30 @@ class DashboardController extends Controller
         $pendingOrders = Order::where('status', 'pending')->count();
         $totalCustomers = User::where('role', 'customer')->count();
         $openTickets = SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
-        
+
         // Calcul des pourcentages de croissance
         $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
         $currentMonthStart = Carbon::now()->startOfMonth();
-        
+
         // Croissance des produits
         $lastMonthProducts = Product::where('created_at', '>=', $lastMonthStart)
             ->where('created_at', '<=', $lastMonthEnd)
             ->count();
         $currentMonthProducts = Product::where('created_at', '>=', $currentMonthStart)->count();
-        $productGrowth = $lastMonthProducts > 0 
-            ? round(($currentMonthProducts - $lastMonthProducts) / $lastMonthProducts * 100) 
+        $productGrowth = $lastMonthProducts > 0
+            ? round(($currentMonthProducts - $lastMonthProducts) / $lastMonthProducts * 100)
             : 0;
-        
+
         // Croissance des commandes
         $lastMonthOrders = Order::where('created_at', '>=', $lastMonthStart)
             ->where('created_at', '<=', $lastMonthEnd)
             ->count();
         $currentMonthOrders = Order::where('created_at', '>=', $currentMonthStart)->count();
-        $orderGrowth = $lastMonthOrders > 0 
-            ? round(($currentMonthOrders - $lastMonthOrders) / $lastMonthOrders * 100) 
+        $orderGrowth = $lastMonthOrders > 0
+            ? round(($currentMonthOrders - $lastMonthOrders) / $lastMonthOrders * 100)
             : 0;
-        
+
         // Croissance des clients
         $lastMonthCustomers = User::where('role', 'customer')
             ->where('created_at', '>=', $lastMonthStart)
@@ -210,23 +210,23 @@ class DashboardController extends Controller
         $currentMonthCustomers = User::where('role', 'customer')
             ->where('created_at', '>=', $currentMonthStart)
             ->count();
-        $customerGrowth = $lastMonthCustomers > 0 
-            ? round(($currentMonthCustomers - $lastMonthCustomers) / $lastMonthCustomers * 100) 
+        $customerGrowth = $lastMonthCustomers > 0
+            ? round(($currentMonthCustomers - $lastMonthCustomers) / $lastMonthCustomers * 100)
             : 0;
-        
+
         // Croissance des tickets
         $lastWeekStart = Carbon::now()->subWeek()->startOfWeek();
         $lastWeekEnd = Carbon::now()->subWeek()->endOfWeek();
         $currentWeekStart = Carbon::now()->startOfWeek();
-        
+
         $lastWeekTickets = SupportTicket::where('created_at', '>=', $lastWeekStart)
             ->where('created_at', '<=', $lastWeekEnd)
             ->count();
         $currentWeekTickets = SupportTicket::where('created_at', '>=', $currentWeekStart)->count();
-        $ticketGrowth = $lastWeekTickets > 0 
-            ? round(($currentWeekTickets - $lastWeekTickets) / $lastWeekTickets * 100) 
+        $ticketGrowth = $lastWeekTickets > 0
+            ? round(($currentWeekTickets - $lastWeekTickets) / $lastWeekTickets * 100)
             : 0;
-        
+
         // Nouveaux clients cette semaine
         $newCustomersThisWeek = User::where('role', 'customer')
             ->where('created_at', '>=', $currentWeekStart)
@@ -256,7 +256,7 @@ class DashboardController extends Controller
     public function getSalesData(Request $request)
     {
         $period = $request->input('period', 'month');
-        
+
         switch ($period) {
             case 'week':
                 $startDate = Carbon::now()->subDays(7);
@@ -269,9 +269,9 @@ class DashboardController extends Controller
                 $startDate = Carbon::now()->subDays(30);
                 break;
         }
-        
+
         $endDate = Carbon::now();
-        
+
         $dailySales = Order::where('created_at', '>=', $startDate)
             ->where('status', '!=', 'cancelled')
             ->select(
@@ -354,4 +354,89 @@ class DashboardController extends Controller
             'data' => $data,
         ];
     }
+
+
+
+
+    /**
+     * Display a comprehensive listing of all orders for admin.
+     * 
+     * @param Request $request
+     * @return \Illuminate\View\View
+     */
+    public function adminAllOrders(Request $request)
+    {
+        // This route should be protected with admin middleware in routes file
+
+        $query = Order::with(['user', 'items.product', 'invoice']);
+
+        // Admin-specific filters
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('payment_status') && $request->payment_status != '') {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->has('date_from') && $request->date_from != '') {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && $request->date_to != '') {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Admin-specific search (more comprehensive)
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('total_amount', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('invoice', function ($q) use ($search) {
+                        $q->where('invoice_number', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Sort orders (default: newest first)
+        $sortField = $request->input('sort_field', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        // Get all statistics for admin dashboard
+        $totalOrders = Order::count();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $completedOrders = Order::where('status', 'completed')->count();
+        $cancelledOrders = Order::where('status', 'cancelled')->count();
+
+        $totalRevenue = Order::where('payment_status', 'paid')->sum('total_amount');
+        $pendingRevenue = Order::where('payment_status', 'pending')->sum('total_amount');
+
+        // Option 1: Paginate with more items per page for admin
+        $orders = $query->paginate(25);
+
+        // Option 2: Get all orders without pagination
+        // $orders = $query->get();
+
+        // Get users for filter dropdown
+        $users = User::all();
+
+        return view('dashboard.orders.index', compact(
+            'orders',
+            'users',
+            'totalOrders',
+            'pendingOrders',
+            'completedOrders',
+            'cancelledOrders',
+            'totalRevenue',
+            'pendingRevenue'
+        ));
+    }
+
 }

@@ -22,6 +22,8 @@ use App\Http\Controllers\PageController;
 // use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\StripeController;
+use App\Http\Controllers\CouponController;
+use App\Http\Controllers\OrdersController;
 
 
 
@@ -414,9 +416,14 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
     
     // Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
-    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
+    Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
+    Route::get('/orders/data', [OrdersController::class, 'getOrdersData'])->name('orders.data');
+    Route::get('/orders/{id}', [OrdersController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{id}/invoice', [OrdersController::class, 'invoice'])->name('orders.invoice');
+    Route::patch('/orders/{id}/status', [OrdersController::class, 'updateStatus'])->name('orders.update-status');
+    Route::patch('/orders/{id}/payment', [OrdersController::class, 'updatePaymentStatus'])->name('orders.update-payment');
+
+
     
     // Customers
     Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');
