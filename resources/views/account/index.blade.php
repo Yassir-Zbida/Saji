@@ -105,19 +105,30 @@
                     @elseif($user->orders)
                         <div class="space-y-5">
                             @foreach($user->orders->take(3) as $order)
-                                <div class="bg-gray-50 rounded-lg p-5 transition-all duration-300 hover:bg-gray-100 hover:shadow-sm">
+                                <div class="bg-gray-50 rounded-lg p-5 transition-all duration-300 border border-gray-200 hover:bg-gray-100 hover:shadow-sm">
                                     <div class="flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
                                         <div>
                                             <p class="text-sm font-medium text-primary mb-1">Order #{{ $order->order_number }}</p>
                                             <p class="text-xs text-gray-500">{{ $order->created_at->format('M d, Y') }}</p>
                                         </div>
                                         <div>
-                                            <span class="inline-flex px-3 py-1 text-xs rounded-full
+                                            <span class="inline-flex items-center px-3 py-1 text-xs rounded-full
                                                 @if($order->status == 'completed') bg-green-100 text-green-800
                                                 @elseif($order->status == 'processing') bg-blue-100 text-blue-800
+                                                @elseif($order->status == 'shipped') bg-indigo-100 text-indigo-800
                                                 @elseif($order->status == 'cancelled') bg-red-100 text-red-800
+                                                @elseif($order->status == 'pending') bg-yellow-100 text-yellow-800
+                                                @elseif($order->status == 'delivered') bg-emerald-100 text-emerald-800
                                                 @else bg-gray-100 text-gray-800
                                                 @endif">
+                                                @if($order->status == 'completed')<i class="ri-check-line mr-1"></i>
+                                                @elseif($order->status == 'processing')<i class="ri-loader-2-line mr-1"></i>
+                                                @elseif($order->status == 'shipped')<i class="ri-truck-line mr-1"></i>
+                                                @elseif($order->status == 'cancelled')<i class="ri-close-line mr-1"></i>
+                                                @elseif($order->status == 'pending')<i class="ri-time-line mr-1"></i>
+                                                @elseif($order->status == 'delivered')<i class="ri-checkbox-circle-line mr-1"></i>
+                                                @else<i class="ri-information-line mr-1"></i>
+                                                @endif
                                                 {{ ucfirst($order->status) }}
                                             </span>
                                         </div>
@@ -132,7 +143,7 @@
                                     </div>
                                 </div>
                             @endforeach
-                            <div class="text-center mt-6">
+                            <div class="text-center mt-6 hidden">
                                 <a href="{{ route('account.orders') }}" class="inline-flex items-center px-5 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-all duration-300">
                                     <i class="ri-shopping-bag-line mr-2"></i> View All Orders
                                 </a>
@@ -151,7 +162,7 @@
                         </div>
                     @endif
                 </div>
-            </div>
+            </div> 
             
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md h-full" data-aos="fade-up" data-aos-delay="300">
                 <div class="card-header border-b border-gray-200 px-6 py-5 flex justify-between items-center">
@@ -246,7 +257,7 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="text-center mt-6">
+                        <div class="text-center mt-6 hidden">
                             <a href="{{ route('account.addresses') }}" class="inline-flex items-center px-5 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-all duration-300">
                                 <i class="ri-map-pin-line mr-2"></i> Manage All Addresses
                             </a>

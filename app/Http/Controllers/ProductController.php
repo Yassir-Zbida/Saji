@@ -418,4 +418,6 @@ class ProductController extends Controller
         return redirect()->route('products.show', $product)
             ->with('success', 'Stock mis à jour avec succès.');
     }
+
+    
 }

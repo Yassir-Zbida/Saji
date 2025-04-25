@@ -31,7 +31,8 @@
 
                 <!-- Sorting Dropdown -->
                 <div class="dropdown-saji relative border flex justify-between border-gray-200 pl-5 py-2 rounded-md">
-                    <select id="sort-select" class="control-btn appearance-none pr-10 rounded-md bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-transparent focus:border-transparent">>
+                    <select id="sort-select"
+                        class="control-btn appearance-none pr-10 rounded-md bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-transparent focus:border-transparent">>
                         <option value="default"
                             {{ request()->get('sort') == 'default' || !request()->has('sort') ? 'selected' : '' }}>Default
                             sorting</option>
@@ -53,13 +54,14 @@
 
     <!-- Main Shop Content -->
     <div class="container mx-auto px-8 pb-16">
-        <!-- Products Grid -->
+        <!-- Replace your current foreach loop with this updated version -->
         <div id="products-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
             @foreach ($products as $product)
-                <div class="product-card bg-white rounded-lg border border-gray-200 overflow-hidden transition-all hover:shadow-md"
+                <div class="product-card bg-white rounded-lg border border-gray-200 overflow-hidden transition-all hover:shadow-md flex flex-col"
                     data-product-id="{{ $product->id }}">
-                    <a href="{{ route('shop.product', $product->slug) }}" class="block relative">
-                        <div class="aspect-square bg-gray-100 overflow-hidden">
+                    <!-- This wrapper div helps with the list view layout -->
+                    <div class="product-image-container aspect-square bg-gray-100 overflow-hidden relative">
+                        <a href="{{ route('products.show', $product->slug) }}" class="block">
                             @if (isset($product->images) && $product->images->count() > 0)
                                 <img src="{{ asset('storage/' . $product->images->first()->path) }}"
                                     alt="{{ $product->name }}"
@@ -68,7 +70,7 @@
                                 <img src="{{ asset('images/placeholder.jpg') }}" alt="{{ $product->name }}"
                                     class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
                             @endif
-                        </div>
+                        </a>
 
                         @if ($product->sale_price)
                             <div class="absolute top-2 left-2 bg-red-500 text-white text-xs py-1 px-2 rounded-lg">
@@ -77,21 +79,31 @@
                         @endif
 
                         <button
-                            class="add-to-wishlist absolute top-2 right-2 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-gray-50 transition">
-                            <i class="ri-heart-line text-gray-500 hover:text-primary"></i>
+                            class="product-wishlist-btn absolute top-2 right-2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-transparent">
+                            <i class="ri-heart-line wishlist-icon text-lg transition-all"></i>
                         </button>
-                    </a>
+                    </div>
 
-                    <div class="p-3">
-                        @if (isset($product->category) && $product->category)
-                            <div class="text-xs text-gray-500 mb-1">{{ $product->category->name }}</div>
-                        @endif
+                    <div class="product-content p-3 flex-1 flex flex-col">
+                        <div class="product-details flex-1">
+                            <div class="product-meta">
+                                @if (isset($product->category) && $product->category)
+                                    <div class="product-category text-xs text-gray-500">{{ $product->category->name }}
+                                    </div>
+                                @endif
+                            </div>
 
-                        <h3 class="font-medium mb-2 text-gray-900 text-sm">
-                            <a href="{{ route('shop.product', $product->slug) }}">{{ $product->name }}</a>
-                        </h3>
+                            <h3 class="product-title font-medium mb-2 text-gray-900 text-sm">
+                                <a href="{{ route('products.show', $product->slug) }}">{{ $product->name }}</a>
+                            </h3>
 
-                        <div class="flex items-center justify-between">
+                            <!-- Product description - hidden in grid view, visible in list view -->
+                            <div class="product-description hidden text-sm text-gray-600 mb-3">
+                                {{ $product->short_description ?? 'A high-quality product for your collection.' }}
+                            </div>
+                        </div>
+
+                        <div class="product-actions mt-auto">
                             <div class="product-price">
                                 @if ($product->sale_price)
                                     <span class="font-medium">{{ number_format($product->sale_price, 2) }} €</span>
@@ -102,13 +114,15 @@
                                     <span class="font-medium">{{ number_format($product->price, 2) }} €</span>
                                 @endif
                             </div>
-                        </div>
 
-                        <button
-                            class="add-to-cart-btn w-full mt-2 bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition flex items-center justify-center text-sm"
-                            data-product-id="{{ $product->id }}">
-                            <i class="ri-shopping-bag-2-line mr-2"></i> Add to Cart
-                        </button>
+                            <div class="product-buttons">
+                                <button
+                                    class="add-to-cart-btn w-full mt-2 bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition flex items-center justify-center text-sm"
+                                    data-product-id="{{ $product->id }}">
+                                    <i class="ri-shopping-bag-2-line mr-2"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endforeach
@@ -243,50 +257,6 @@
                                 </label>
                             </div>
                         @endforeach
-                    </div>
-                </div>
-
-                <!-- Colors -->
-                <div class="mb-6">
-                    <h3 class="font-medium mb-4 uppercase text-sm">Colors</h3>
-
-                    <div class="flex flex-wrap gap-2">
-                        <label class="color-option cursor-pointer">
-                            <input type="checkbox" name="color[]" value="black" class="sr-only color-filter"
-                                {{ in_array('black', (array) request()->get('color', [])) ? 'checked' : '' }}>
-                            <span
-                                class="w-8 h-8 rounded-full bg-black inline-block border border-transparent hover:border-gray-300"></span>
-                        </label>
-                        <label class="color-option cursor-pointer">
-                            <input type="checkbox" name="color[]" value="white" class="sr-only color-filter"
-                                {{ in_array('white', (array) request()->get('color', [])) ? 'checked' : '' }}>
-                            <span
-                                class="w-8 h-8 rounded-full bg-white inline-block border border-gray-300 hover:border-gray-400"></span>
-                        </label>
-                        <label class="color-option cursor-pointer">
-                            <input type="checkbox" name="color[]" value="red" class="sr-only color-filter"
-                                {{ in_array('red', (array) request()->get('color', [])) ? 'checked' : '' }}>
-                            <span
-                                class="w-8 h-8 rounded-full bg-red-600 inline-block border border-transparent hover:border-gray-300"></span>
-                        </label>
-                        <label class="color-option cursor-pointer">
-                            <input type="checkbox" name="color[]" value="blue" class="sr-only color-filter"
-                                {{ in_array('blue', (array) request()->get('color', [])) ? 'checked' : '' }}>
-                            <span
-                                class="w-8 h-8 rounded-full bg-blue-600 inline-block border border-transparent hover:border-gray-300"></span>
-                        </label>
-                        <label class="color-option cursor-pointer">
-                            <input type="checkbox" name="color[]" value="green" class="sr-only color-filter"
-                                {{ in_array('green', (array) request()->get('color', [])) ? 'checked' : '' }}>
-                            <span
-                                class="w-8 h-8 rounded-full bg-green-600 inline-block border border-transparent hover:border-gray-300"></span>
-                        </label>
-                        <label class="color-option cursor-pointer">
-                            <input type="checkbox" name="color[]" value="yellow" class="sr-only color-filter"
-                                {{ in_array('yellow', (array) request()->get('color', [])) ? 'checked' : '' }}>
-                            <span
-                                class="w-8 h-8 rounded-full bg-yellow-500 inline-block border border-transparent hover:border-gray-300"></span>
-                        </label>
                     </div>
                 </div>
             </div>
@@ -426,6 +396,6 @@
     </style>
 @endsection
 
-@section('scripts')
+
     <script src="{{ asset('js/shop.js') }}"></script>
-@endsection
+

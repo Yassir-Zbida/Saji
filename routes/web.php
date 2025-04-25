@@ -19,8 +19,9 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\AccountController;
+// use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\StripeController;
 
 
 
@@ -82,7 +83,7 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/account/tickets/{ticket}/close', [SupportTicketController::class, 'customerClose'])->name('account.tickets.close');
     Route::post('/account/tickets/{ticket}/reopen', [SupportTicketController::class, 'customerReopen'])->name('account.tickets.reopen');
     
-    Route::get('/product/{id}', 'App\Http\Controllers\ProductController@show')->name('products.show');
+    Route::get('/product/{id}', [ShopController::class, 'product'])->name('products.show');
 
      Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
      Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -113,6 +114,7 @@ Route::prefix('cart/ajax')->group(function () {
 });
 
 // Cart Routes
+Route::post('/cart/ajax/add', [App\Http\Controllers\AjaxCartController::class, 'addToCart'])->name('cart.ajax.add');
 Route::get('/cart', [App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/update/{id}', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
 Route::post('/cart/remove/{id}', [App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
@@ -127,9 +129,66 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/filter', [ShopController::class, 'filter'])->name('shop.filter');
 Route::get('/shop/categories', [ShopController::class, 'categories'])->name('shop.categories');
 Route::get('/shop/category/{slug}', [ShopController::class, 'category'])->name('shop.category');
-Route::get('/product/{slug}', [ShopController::class, 'product'])->name('shop.product');
+Route::get('/product/{slug}', [ShopController::class, 'product'])->name('products.show');
 Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop.quick-view');
 
+
+// Checkout routes
+// Route::prefix('checkout')->group(function () {
+//     // Display checkout page
+//     Route::get('/', [CheckoutController::class, 'index'])
+//         ->name('checkout.index');
+    
+//     // Process checkout
+//     Route::post('/process', [CheckoutController::class, 'process'])
+//         ->name('checkout.process');
+    
+//     // Apply coupon
+//     Route::post('/apply-coupon', [CheckoutController::class, 'applyCoupon'])
+//         ->name('checkout.applyCoupon');
+    
+//     // Remove coupon
+//     Route::post('/remove-coupon', [CheckoutController::class, 'removeCoupon'])
+//         ->name('checkout.removeCoupon');
+    
+//     // Order complete page
+//     Route::get('/complete/{order}', [CheckoutController::class, 'complete'])
+//         ->name('checkout.complete');
+// });
+
+// Route::get('/cart/checkout', [CheckoutController::class, 'index'])
+//     ->name('cart.checkout');
+
+// Route::prefix('checkout')->group(function () {
+    
+//     Route::get('/payment/{order}', [CheckoutController::class, 'payment'])
+//         ->name('checkout.payment');
+    
+//     Route::post('/create-payment-intent', [CheckoutController::class, 'createPaymentIntent'])
+//         ->name('checkout.createPaymentIntent');
+    
+//     Route::post('/webhook', [StripeController::class, 'handleWebhook'])
+//         ->name('checkout.webhook');
+// });    
+
+
+
+// Ajouter ces routes dans la section des routes de checkout existantes
+// Route::prefix('checkout')->group(function () {
+//     // Routes existantes...
+    
+//     // Afficher la page de paiement Stripe
+//     Route::get('/payment/{order}', [CheckoutController::class, 'payment'])
+//         ->name('checkout.payment');
+    
+//     // Créer une intention de paiement Stripe
+//     Route::post('/create-payment-intent', [CheckoutController::class, 'createPaymentIntent'])
+//         ->name('checkout.createPaymentIntent');
+    
+//     // Webhook Stripe
+//     Route::post('/webhook', [StripeController::class, 'handleWebhook'])
+//         ->name('checkout.webhook');
+// });
 
 
 
@@ -218,6 +277,71 @@ Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop
 // Error Handling
 
 // 404 error view 
+// Checkout routes
+Route::prefix('checkout')->group(function () {
+    // Display checkout page
+    Route::get('/', [CheckoutController::class, 'index'])
+        ->name('checkout.index');
+    
+    // Process checkout
+    Route::post('/process', [CheckoutController::class, 'process'])
+        ->name('checkout.process');
+    
+    // Apply coupon
+    Route::post('/apply-coupon', [CheckoutController::class, 'applyCoupon'])
+        ->name('checkout.applyCoupon');
+    
+    // Remove coupon
+    Route::post('/remove-coupon', [CheckoutController::class, 'removeCoupon'])
+        ->name('checkout.removeCoupon');
+    
+    // Order complete page
+    Route::get('/complete/{order}', [CheckoutController::class, 'complete'])
+        ->name('checkout.complete');
+});
+
+Route::get('/cart/checkout', [CheckoutController::class, 'index'])
+    ->name('cart.checkout');
+
+// Routes Stripe
+
+// Checkout routes
+Route::middleware(['auth'])->group(function () {
+    // Cart and checkout process
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update/{item}', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove/{item}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::get('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+    
+    // Checkout process
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/payment/{order}', [CheckoutController::class, 'payment'])->name('checkout.payment');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
+    Route::get('/checkout/complete/{order}', [CheckoutController::class, 'complete'])->name('checkout.complete');
+    
+    // Stripe routes
+    Route::get('/stripe/checkout/{order}', [StripeController::class, 'checkout'])->name('stripe.checkout');
+    Route::get('/stripe/success/{order}', [StripeController::class, 'success'])->name('stripe.success');
+    Route::get('/stripe/cancel/{order}', [StripeController::class, 'cancel'])->name('stripe.cancel');
+});
+
+// Stripe webhook (no auth middleware)
+Route::post('/stripe/webhook', [StripeController::class, 'handleWebhook'])->name('stripe.webhook');
+
+// // User account routes
+// Route::middleware(['auth'])->prefix('account')->group(function () {
+//     Route::get('/orders', [AccountController::class, 'orders'])->name('account.orders');
+//     Route::get('/orders/{order}', [AccountController::class, 'orderDetail'])->name('account.orders.detail');
+// });
+
+
+
+// Error Handling
+
+// 404 error view 
 Route::fallback(function () {
     return view('errors.404');
 });
@@ -228,3 +352,93 @@ Route::get('/403', function () {
 })->name('forbidden');
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Admin Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register admin routes for your application.
+|
+*/
+
+// Admin group with auth middleware
+Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+    
+    // Dashboard AJAX endpoints
+    Route::get('/dashboard/top-products', [DashboardController::class, 'getTopProducts']);
+    Route::get('/dashboard/summary', [DashboardController::class, 'getDashboardSummary']);
+    
+    // Analytics
+    Route::get('/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
+    
+    // Products
+    Route::get('/products', [ProductController::class, 'index'])->name('admin.products');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('admin.products.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+    Route::patch('/products/{product}/status', [ProductController::class, 'updateStatus']);
+    
+    // Categories
+    Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('admin.categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
+    Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
+    
+    // Customers
+    Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('admin.customers.show');
+    Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('admin.customers.edit');
+    Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('admin.customers.update');
+    
+    // Support Tickets
+    Route::get('/tickets', [TicketController::class, 'index'])->name('admin.tickets');
+    Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('admin.tickets.show');
+    Route::post('/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('admin.tickets.reply');
+    Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus']);
+    
+    // Content
+    Route::get('/content', [ContentController::class, 'index'])->name('admin.content');
+    
+    // Marketing
+    Route::get('/marketing', [MarketingController::class, 'index'])->name('admin.marketing');
+    
+    // Discounts
+    Route::get('/discounts', [DiscountController::class, 'index'])->name('admin.discounts');
+    
+    // Settings
+    Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings');
+});

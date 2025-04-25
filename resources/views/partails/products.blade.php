@@ -1,4 +1,4 @@
-<section class="products-showcase bg-white py-20">
+<section class="products-showcase bg-white py-20 md:px-4 lg:px-8 xl:px-4">
     <div class="container mx-auto px-4">
         <!-- Section Navigator -->
         <div class="flex justify-between items-center mb-16 overflow-x-auto scrollbar-hide">

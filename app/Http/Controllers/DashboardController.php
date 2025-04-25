@@ -1,7 +1,9 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\SupportTicket;
@@ -12,55 +14,110 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-
-
+    /**
+     * Display the dashboard index page.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
-{
-    $totalProducts = Product::count();
-    
-    // Change this line to use 'quantity' instead of 'stock_quantity'
-    // If you don't have a stock_alert_threshold column, you can hardcode a value
-    $lowStockProducts = Product::where('quantity', '<=', 5)->count();
-    // Or if you have a separate column for threshold:
-    // $lowStockProducts = Product::whereRaw('quantity <= min_quantity')->count();
-    
-    $totalOrders = Order::count();
-    $pendingOrders = Order::where('status', 'pending')->count();
-    $totalCustomers = User::where('role', 'customer')->count();
-    $openTickets = SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
+    {
+        $totalProducts = Product::count();
+        
+        // Low stock products
+        $lowStockProducts = Product::where('quantity', '<=', 5)->count();
+        
+        $totalOrders = Order::count();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $totalCustomers = User::where('role', 'customer')->count();
+        $openTickets = SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
 
-    // Get recent orders
-    $recentOrders = Order::with('user')
-        ->orderBy('created_at', 'desc')
-        ->take(5)
-        ->get();
+        // Get recent orders
+        $recentOrders = Order::with('user')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
 
-    // Get recent tickets
-    $recentTickets = SupportTicket::with('user')
-        ->orderBy('created_at', 'desc')
-        ->take(5)
-        ->get();
+        // Get recent tickets
+        $recentTickets = SupportTicket::with('user')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
 
-    // Get sales data for chart
-    $salesData = $this->getSalesData();
+        // Get sales data for chart
+        $salesData = $this->getSalesData();
 
-    // Return the dashboard view and pass the data to it
-    return view('dashboard.index', compact(
-        'totalProducts',
-        'lowStockProducts',
-        'totalOrders',
-        'pendingOrders',
-        'totalCustomers',
-        'openTickets',
-        'recentOrders',
-        'recentTickets',
-        'salesData'
-    ));
-}
+        return view('dashboard.index', compact(
+            'totalProducts',
+            'lowStockProducts',
+            'totalOrders',
+            'pendingOrders',
+            'totalCustomers',
+            'openTickets',
+            'recentOrders',
+            'recentTickets',
+            'salesData'
+        ));
+    }
 
+    /**
+     * Get top selling products
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTopProducts()
+    {
+        $topProducts = DB::table('order_items')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->leftJoin('product_images', function($join) {
+                $join->on('products.id', '=', 'product_images.product_id')
+                    ->whereRaw('product_images.id = (SELECT MIN(id) FROM product_images WHERE product_id = products.id)');
+            })
+            ->select(
+                'products.id',
+                'products.name',
+                'product_images.path as image',
+                DB::raw('SUM(order_items.quantity) as total_quantity'),
+                DB::raw('SUM(order_items.quantity * order_items.price) as total_sales')
+            )
+            ->groupBy('products.id', 'products.name', 'product_images.path')
+            ->orderBy('total_quantity', 'desc')
+            ->take(5)
+            ->get();
+
+        // Format image URLs
+        $topProducts = $topProducts->map(function($product) {
+            if ($product->image) {
+                $product->image = asset('storage/' . $product->image);
+            }
+            return $product;
+        });
+
+        return response()->json($topProducts);
+    }
+
+    /**
+     * Get dashboard summary data for AJAX refresh
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDashboardSummary()
+    {
+        $data = [
+            'totalProducts' => Product::count(),
+            'lowStockProducts' => Product::where('quantity', '<=', 5)->count(),
+            'totalOrders' => Order::count(),
+            'pendingOrders' => Order::where('status', 'pending')->count(),
+            'totalCustomers' => User::where('role', 'customer')->count(),
+            'openTickets' => SupportTicket::whereIn('status', ['open', 'in_progress'])->count(),
+        ];
+
+        return response()->json($data);
+    }
 
     /**
      * Get sales data for the chart.
+     *
+     * @return array
      */
     private function getSalesData()
     {
@@ -106,6 +163,8 @@ class DashboardController extends Controller
 
     /**
      * Display the analytics page.
+     *
+     * @return \Illuminate\View\View
      */
     public function analytics()
     {
@@ -161,7 +220,7 @@ class DashboardController extends Controller
             ->orderBy('total_sales', 'desc')
             ->get();
 
-        return view('dashboard.analytics', compact(
+        return view('admin.dashboard.analytics', compact(
             'monthlyLabels',
             'monthlyData',
             'topProducts',

@@ -17,15 +17,15 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
-        'product_variation_id',
+        // 'product_variation_id',
         'name',
         'sku',
         'price',
         'quantity',
-        'subtotal',
-        'tax_amount',
-        'discount_amount',
-        'total',
+        // 'subtotal',
+        // 'tax_amount',
+        // 'discount_amount',
+        // 'total',
         'options',
     ];
 

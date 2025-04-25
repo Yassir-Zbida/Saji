@@ -141,6 +141,13 @@ class Product extends Model
         return $this->belongsTo(TaxClass::class);
     }
 
+    public function attributeValues()
+    {
+        return $this->belongsToMany(AttributeValue::class, 'product_attribute_values')
+            ->withPivot('product_attribute_id')
+            ->withTimestamps();
+    }
+
     /**
      * Get the order items for the product.
      */
@@ -305,11 +312,11 @@ class Product extends Model
     public function getPrimaryImageUrlAttribute()
     {
         $primaryImage = $this->images()->where('is_primary', true)->first();
-        
+
         if ($primaryImage) {
             return asset('storage/' . $primaryImage->path);
         }
-        
+
         return $this->image ? asset('storage/' . $this->image) : asset('images/placeholder.jpg');
     }
 
