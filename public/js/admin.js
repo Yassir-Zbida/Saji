@@ -1,320 +1,434 @@
-/**
- * Admin dashboard JavaScript file
- */
+// Variables globales
+let salesChart;
 
-// Initialize CSRF token for all AJAX requests
+// Initialisation du tableau de bord
 document.addEventListener('DOMContentLoaded', function() {
-    // Set up CSRF token for AJAX requests
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    // Initialiser le graphique de ventes
+    initializeSalesChart();
     
-    // Configure all AJAX requests to include CSRF token
-    window.axios = require('axios');
-    window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-
-    // Initialize mobile menu functionality
-    initMobileMenu();
-
-    // Initialize sidebar dropdown menus
-    initSidebarDropdowns();
-
-    // Initialize any notifications
-    initNotifications();
-
-    // Initialize any tooltips
-    initTooltips();
+    // Ajouter un écouteur d'événement pour le bouton de rafraîchissement
+    const refreshBtn = document.getElementById('refresh-dashboard');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            refreshDashboardData();
+        });
+    }
+    
+    // Ajouter des écouteurs d'événements pour les boutons de période du graphique
+    document.querySelectorAll('.chart-period-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Supprimer la classe active de tous les boutons
+            document.querySelectorAll('.chart-period-btn').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            
+            // Ajouter la classe active au bouton cliqué
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            this.classList.add('bg-primary', 'text-white');
+            
+            // Mettre à jour le graphique en fonction de la période sélectionnée
+            updateChartPeriod(this.dataset.period);
+        });
+    });
 });
 
 /**
- * Initialize mobile menu functionality
+ * Initialise le graphique de ventes
  */
-function initMobileMenu() {
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const sidebar = document.getElementById('sidebar');
-
-    if (mobileMenuButton && sidebar) {
-        // Toggle sidebar on mobile
-        mobileMenuButton.addEventListener('click', function() {
-            sidebar.classList.toggle('-translate-x-full');
-            sidebar.classList.toggle('translate-x-0');
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnMenuButton = mobileMenuButton.contains(event.target);
-            
-            if (!isClickInsideSidebar && !isClickOnMenuButton && window.innerWidth < 1024) {
-                sidebar.classList.add('-translate-x-full');
-                sidebar.classList.remove('translate-x-0');
-            }
-        });
+function initializeSalesChart() {
+    const salesChartElement = document.getElementById('salesChart');
+    if (!salesChartElement) {
+        console.error('Sales chart element not found');
+        return;
     }
-}
-
-/**
- * Initialize sidebar dropdown menus
- */
-function initSidebarDropdowns() {
-    const dropdownToggles = document.querySelectorAll('.sidebar-dropdown-toggle');
-
-    dropdownToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            const parent = this.closest('li');
-            const submenu = parent.querySelector('.sidebar-submenu');
-            const arrow = this.querySelector('.ri-arrow-right-s-line');
-
-            // Toggle submenu
-            if (submenu) {
-                submenu.classList.toggle('hidden');
-                arrow.classList.toggle('transform');
-                arrow.classList.toggle('rotate-90');
-            }
-        });
-    });
-}
-
-/**
- * Initialize notifications
- */
-function initNotifications() {
-    // Fade out alert messages after 5 seconds
-    const alerts = document.querySelectorAll('.alert-message');
     
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.classList.add('opacity-0');
-            setTimeout(() => {
-                alert.remove();
-            }, 500);
-        }, 5000);
-
-        // Close button functionality
-        const closeBtn = alert.querySelector('.alert-close-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                alert.classList.add('opacity-0');
-                setTimeout(() => {
-                    alert.remove();
-                }, 500);
-            });
-        }
-    });
-}
-
-/**
- * Initialize tooltips
- */
-function initTooltips() {
-    const tooltipTriggers = document.querySelectorAll('[data-tooltip]');
+    const salesCtx = salesChartElement.getContext('2d');
+    if (!salesCtx) {
+        console.error('Could not get 2D context for sales chart');
+        return;
+    }
     
-    tooltipTriggers.forEach(trigger => {
-        trigger.addEventListener('mouseenter', function() {
-            const tooltipText = this.getAttribute('data-tooltip');
-            
-            const tooltip = document.createElement('div');
-            tooltip.classList.add('tooltip', 'absolute', 'bg-gray-800', 'text-white', 'text-xs', 'py-1', 'px-2', 'rounded', 'opacity-0', 'transition-opacity', 'z-50');
-            tooltip.textContent = tooltipText;
-            
-            document.body.appendChild(tooltip);
-            
-            const triggerRect = this.getBoundingClientRect();
-            tooltip.style.top = `${triggerRect.top - tooltip.offsetHeight - 5 + window.scrollY}px`;
-            tooltip.style.left = `${triggerRect.left + (triggerRect.width / 2) - (tooltip.offsetWidth / 2) + window.scrollX}px`;
-            
-            setTimeout(() => {
-                tooltip.classList.replace('opacity-0', 'opacity-100');
-            }, 10);
-            
-            this.addEventListener('mouseleave', function onMouseLeave() {
-                tooltip.classList.replace('opacity-100', 'opacity-0');
-                
-                setTimeout(() => {
-                    document.body.removeChild(tooltip);
-                }, 200);
-                
-                this.removeEventListener('mouseleave', onMouseLeave);
-            });
-        });
-    });
-}
-
-/**
- * Dashboard specific functionality
- */
-// Fetch dashboard summary data
-function fetchDashboardSummary() {
-    axios.get('/admin/dashboard/summary')
-        .then(response => {
-            updateDashboardCounters(response.data);
-        })
-        .catch(error => {
-            console.error('Error fetching dashboard summary:', error);
-        });
-}
-
-// Update dashboard counter elements
-function updateDashboardCounters(data) {
-    // Update counters with new data
-    if (data.totalProducts) {
-        document.getElementById('total-products-count').textContent = data.totalProducts;
-    }
-    if (data.totalOrders) {
-        document.getElementById('total-orders-count').textContent = data.totalOrders;
-    }
-    if (data.totalCustomers) {
-        document.getElementById('total-customers-count').textContent = data.totalCustomers;
-    }
-    if (data.openTickets) {
-        document.getElementById('open-tickets-count').textContent = data.openTickets;
-    }
-}
-
-/**
- * Product management functions
- */
-// Toggle product status (active/inactive)
-function toggleProductStatus(productId, currentStatus) {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
-    axios.patch(`/admin/products/${productId}/status`, {
-        status: newStatus
-    })
-    .then(response => {
-        if (response.data.success) {
-            // Update the UI to reflect the new status
-            const statusBadge = document.querySelector(`#product-${productId} .status-badge`);
-            if (statusBadge) {
-                statusBadge.textContent = newStatus === 'active' ? 'Active' : 'Inactive';
-                statusBadge.classList.remove('bg-green-100', 'text-green-800', 'bg-gray-100', 'text-gray-800');
-                statusBadge.classList.add(newStatus === 'active' ? 'bg-green-100' : 'bg-gray-100');
-                statusBadge.classList.add(newStatus === 'active' ? 'text-green-800' : 'text-gray-800');
-            }
-            
-            // Show success message
-            showNotification('Product status updated successfully', 'success');
-        }
-    })
-    .catch(error => {
-        console.error('Error updating product status:', error);
-        showNotification('Failed to update product status', 'error');
-    });
-}
-
-/**
- * Order management functions
- */
-// Update order status
-function updateOrderStatus(orderId, status) {
-    axios.patch(`/admin/orders/${orderId}/status`, {
-        status: status
-    })
-    .then(response => {
-        if (response.data.success) {
-            // Update the UI to reflect the new status
-            const statusBadge = document.querySelector(`#order-${orderId} .status-badge`);
-            if (statusBadge) {
-                statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-                
-                // Remove all current status classes
-                statusBadge.classList.remove(
-                    'bg-yellow-100', 'text-yellow-800',
-                    'bg-blue-100', 'text-blue-800',
-                    'bg-green-100', 'text-green-800',
-                    'bg-red-100', 'text-red-800',
-                    'bg-gray-100', 'text-gray-800'
-                );
-                
-                // Add new status classes
-                switch (status) {
-                    case 'pending':
-                        statusBadge.classList.add('bg-yellow-100', 'text-yellow-800');
-                        break;
-                    case 'processing':
-                        statusBadge.classList.add('bg-blue-100', 'text-blue-800');
-                        break;
-                    case 'completed':
-                        statusBadge.classList.add('bg-green-100', 'text-green-800');
-                        break;
-                    case 'cancelled':
-                        statusBadge.classList.add('bg-red-100', 'text-red-800');
-                        break;
-                    default:
-                        statusBadge.classList.add('bg-gray-100', 'text-gray-800');
+    try {
+        // Récupérer les données du graphique depuis l'attribut data
+        const salesLabels = JSON.parse(salesChartElement.dataset.labels || '[]');
+        const salesValues = JSON.parse(salesChartElement.dataset.values || '[]');
+        
+        // Créer le graphique
+        salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: salesLabels,
+                datasets: [{
+                    label: 'Sales',
+                    data: salesValues,
+                    borderColor: '#111111',
+                    backgroundColor: 'rgba(17, 17, 17, 0.1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#111111',
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(17, 17, 17, 0.9)',
+                        padding: 10,
+                        cornerRadius: 4,
+                        titleFont: {
+                            size: 12,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return '€' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10
+                            },
+                            color: '#6B7280'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 10
+                            },
+                            color: '#6B7280',
+                            callback: function(value) {
+                                return '€' + value;
+                            }
+                        }
+                    }
                 }
             }
-            
-            // Show success message
-            showNotification('Order status updated successfully', 'success');
+        });
+    } catch (error) {
+        console.error('Error initializing sales chart:', error);
+    }
+}
+
+/**
+ * Rafraîchit les données du tableau de bord
+ */
+function refreshDashboardData() {
+    // Afficher l'état de chargement
+    const refreshBtn = document.getElementById('refresh-dashboard');
+    if (!refreshBtn) {
+        console.error('Refresh button not found');
+        return;
+    }
+    
+    const originalContent = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i> Refreshing...';
+    refreshBtn.disabled = true;
+    
+    // Vérifier si le jeton CSRF est disponible
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        console.error('CSRF token not found. Add <meta name="csrf-token" content="{{ csrf_token() }}"> to your layout.');
+        refreshBtn.innerHTML = originalContent;
+        refreshBtn.disabled = false;
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+    }
+    
+    // Récupérer les données mises à jour du tableau de bord
+    fetch('/admin/dashboard/summary', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json()
+                .then(errorData => {
+                    throw new Error(errorData.error || `Server responded with ${response.status}`);
+                })
+                .catch(() => {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                });
         }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Dashboard data refreshed successfully:', data);
+        
+        // Mettre à jour les statistiques
+        updateElementText('total-products', data.totalProducts);
+        updateElementText('low-stock-products', data.lowStockProducts);
+        updateElementText('total-orders', data.totalOrders);
+        updateElementText('pending-orders', data.pendingOrders);
+        updateElementText('total-customers', data.totalCustomers);
+        updateElementText('open-tickets', data.openTickets);
+        
+        // Mettre à jour les indicateurs de croissance
+        updateGrowthIndicator('total-products', data.productGrowth);
+        updateGrowthIndicator('total-orders', data.orderGrowth);
+        updateGrowthIndicator('total-customers', data.customerGrowth);
+        updateGrowthIndicator('open-tickets', data.ticketGrowth, true);
+        
+        // Rafraîchir les autres composants
+        fetchTopProducts();
+        updateChartPeriod('month'); // Rafraîchir le graphique avec la période actuelle
+        
+        // Ajouter un effet de surbrillance subtil pour montrer les données mises à jour
+        document.querySelectorAll('#stats-container > div').forEach(card => {
+            card.classList.add('bg-green-50');
+            setTimeout(() => {
+                card.classList.remove('bg-green-50');
+            }, 1000);
+        });
+        
+        // Réinitialiser le bouton
+        refreshBtn.innerHTML = originalContent;
+        refreshBtn.disabled = false;
     })
     .catch(error => {
-        console.error('Error updating order status:', error);
-        showNotification('Failed to update order status', 'error');
+        console.error('Error refreshing dashboard data:', error);
+        refreshBtn.innerHTML = originalContent;
+        refreshBtn.disabled = false;
+        
+        // Afficher une notification d'erreur
+        alert('Failed to refresh dashboard data: ' + error.message);
     });
 }
 
 /**
- * Utility functions
+ * Met à jour le texte d'un élément s'il existe
  */
-// Show notification/toast message
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.classList.add(
-        'fixed', 'right-4', 'bottom-4', 'p-4', 'rounded-lg', 'shadow-lg', 
-        'transition-opacity', 'duration-500', 'opacity-0', 'z-50',
-        'flex', 'items-center'
-    );
-    
-    // Set notification color based on type
-    switch (type) {
-        case 'success':
-            notification.classList.add('bg-green-100', 'text-green-800', 'border-l-4', 'border-green-500');
-            notification.innerHTML = '<i class="ri-checkbox-circle-line text-xl mr-3"></i>';
-            break;
-        case 'error':
-            notification.classList.add('bg-red-100', 'text-red-800', 'border-l-4', 'border-red-500');
-            notification.innerHTML = '<i class="ri-error-warning-line text-xl mr-3"></i>';
-            break;
-        case 'warning':
-            notification.classList.add('bg-yellow-100', 'text-yellow-800', 'border-l-4', 'border-yellow-500');
-            notification.innerHTML = '<i class="ri-alert-line text-xl mr-3"></i>';
-            break;
-        default:
-            notification.classList.add('bg-blue-100', 'text-blue-800', 'border-l-4', 'border-blue-500');
-            notification.innerHTML = '<i class="ri-information-line text-xl mr-3"></i>';
+function updateElementText(elementId, text) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = text;
+    } else {
+        console.warn(`Element with ID "${elementId}" not found`);
+    }
+}
+
+/**
+ * Met à jour les indicateurs de croissance
+ */
+function updateGrowthIndicator(elementId, growthValue, inverse = false) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        console.warn(`Element with ID "${elementId}" not found`);
+        return;
     }
     
-    // Add message
-    notification.innerHTML += `<div>${message}</div>`;
+    const growthElement = element.nextElementSibling;
+    if (!growthElement) {
+        console.warn(`Growth indicator for "${elementId}" not found`);
+        return;
+    }
     
-    // Add close button
-    const closeButton = document.createElement('button');
-    closeButton.classList.add('ml-auto', 'text-gray-500', 'hover:text-gray-700');
-    closeButton.innerHTML = '<i class="ri-close-line"></i>';
-    closeButton.addEventListener('click', () => {
-        notification.classList.replace('opacity-100', 'opacity-0');
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 500);
+    // Pour les tickets, la croissance est inversée (l'augmentation est mauvaise, la diminution est bonne)
+    const isPositive = inverse ? growthValue < 0 : growthValue >= 0;
+    
+    // Mettre à jour l'icône et la couleur
+    growthElement.className = `ml-2 text-xs ${isPositive ? 'text-green-600' : 'text-red-600'} flex items-center`;
+    
+    // Mettre à jour l'icône
+    const iconElement = growthElement.querySelector('i');
+    if (iconElement) {
+        iconElement.className = isPositive ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line';
+    } else {
+        console.warn(`Icon element for "${elementId}" growth indicator not found`);
+    }
+    
+    // Mettre à jour le texte
+    const textNode = growthElement.childNodes[1];
+    if (textNode) {
+        textNode.nodeValue = ` ${Math.abs(growthValue)}% `;
+    } else {
+        console.warn(`Text node for "${elementId}" growth indicator not found`);
+    }
+}
+
+/**
+ * Met à jour le graphique en fonction de la période sélectionnée
+ */
+function updateChartPeriod(period) {
+    // Afficher l'état de chargement sur le graphique
+    const chartContainer = document.getElementById('salesChart');
+    if (!chartContainer) {
+        console.error('Sales chart container not found');
+        return;
+    }
+    
+    const chartParent = chartContainer.parentNode;
+    if (chartParent) {
+        chartParent.classList.add('opacity-50');
+    }
+    
+    // Vérifier si le jeton CSRF est disponible
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        console.error('CSRF token not found. Add <meta name="csrf-token" content="{{ csrf_token() }}"> to your layout.');
+        if (chartParent) {
+            chartParent.classList.remove('opacity-50');
+        }
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+    }
+    
+    // Préparer l'URL de la requête en fonction de la période
+    const url = `/admin/dashboard/sales-data?period=${period}`;
+    
+    // Récupérer les données pour la période sélectionnée
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json()
+                .then(errorData => {
+                    throw new Error(errorData.error || `Server responded with ${response.status}`);
+                })
+                .catch(() => {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Chart data updated successfully:', data);
+        
+        // Mettre à jour le graphique avec les nouvelles données
+        if (salesChart) {
+            salesChart.data.labels = data.labels;
+            salesChart.data.datasets[0].data = data.data;
+            salesChart.update();
+        } else {
+            console.error('Sales chart not initialized');
+        }
+        
+        // Supprimer l'état de chargement
+        if (chartParent) {
+            chartParent.classList.remove('opacity-50');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating chart data:', error);
+        if (chartParent) {
+            chartParent.classList.remove('opacity-50');
+        }
+        
+        // Afficher une notification d'erreur
+        alert('Failed to update chart data: ' + error.message);
     });
-    notification.appendChild(closeButton);
+}
+
+/**
+ * Récupère les produits les plus vendus avec AJAX
+ */
+function fetchTopProducts() {
+    const productsList = document.getElementById('top-products-list');
+    if (!productsList) {
+        console.error('Top products list container not found');
+        return;
+    }
     
-    // Add to the DOM
-    document.body.appendChild(notification);
+    // Vérifier si le jeton CSRF est disponible
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        console.error('CSRF token not found. Add <meta name="csrf-token" content="{{ csrf_token() }}"> to your layout.');
+        productsList.innerHTML = '<div class="text-center py-4"><p class="text-sm text-gray-500">Failed to load products: CSRF token missing</p></div>';
+        return;
+    }
     
-    // Show notification
-    setTimeout(() => {
-        notification.classList.replace('opacity-0', 'opacity-100');
-    }, 10);
+    productsList.innerHTML = '<div class="flex justify-center items-center py-6"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>';
     
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        notification.classList.replace('opacity-100', 'opacity-0');
-        setTimeout(() => {
-            if (document.body.contains(notification)) {
-                document.body.removeChild(notification);
-            }
-        }, 500);
-    }, 5000);
+    fetch('/admin/dashboard/top-products', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json()
+                .then(errorData => {
+                    throw new Error(errorData.error || `Server responded with ${response.status}`);
+                })
+                .catch(() => {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Top products fetched successfully:', data);
+        
+        if (data.length === 0) {
+            productsList.innerHTML = '<div class="text-center py-4"><p class="text-sm text-gray-500">No products found</p></div>';
+            return;
+        }
+        
+        let html = '';
+        data.forEach(product => {
+            html += `
+            <div class="flex items-center space-x-3 p-3 border border-gray-100 rounded-md hover:bg-gray-50">
+                <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-md overflow-hidden">
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">` : '<div class="flex items-center justify-center h-full w-full text-gray-400"><i class="ri-image-line"></i></div>'}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">${product.name}</p>
+                    <p class="text-xs text-gray-500">Sales: ${product.total_quantity}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-medium text-gray-900">€${parseFloat(product.total_sales).toFixed(2)}</p>
+                </div>
+            </div>
+            `;
+        });
+        
+        productsList.innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error fetching top products:', error);
+        productsList.innerHTML = '<div class="text-center py-4"><p class="text-sm text-gray-500">Failed to load products: ' + error.message + '</p></div>';
+    });
 }

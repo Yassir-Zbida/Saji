@@ -447,14 +447,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 // Dashboard routes
 Route::prefix('admin/dashboard')->name('admin.dashboard.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
-    Route::get('/top-products', [DashboardController::class, 'getTopProducts'])->name('top-products');
+    Route::get('/top-products', [DashboardController::class, 'getTopProductsApi'])->name('top-products');
     Route::get('/summary', [DashboardController::class, 'getDashboardSummary'])->name('summary');
     Route::get('/sales-data', [DashboardController::class, 'getSalesData'])->name('sales-data');
-});
-// Routes du tableau de bord
-Route::prefix('admin/dashboard')->name('admin.dashboard.')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('index');
-    Route::get('/top-products', [DashboardController::class, 'getTopProducts'])->name('top-products');
-    Route::get('/summary', [DashboardController::class, 'getDashboardSummary'])->name('summary');
-    Route::get('/sales-data', [DashboardController::class, 'getSalesData'])->name('sales-data');
+    Route::get('/analytics', [DashboardController::class, 'analytics'])->name('analytics');
 });

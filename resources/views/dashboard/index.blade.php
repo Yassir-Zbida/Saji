@@ -140,7 +140,7 @@
                     </div>
                 </div>
                 <div class="h-64">
-                    <canvas id="salesChart"></canvas>
+                    <canvas id="salesChart" data-labels="{{ json_encode($salesData['labels']) }}" data-values="{{ json_encode($salesData['data']) }}"></canvas>
                 </div>
             </div>
 
@@ -182,90 +182,131 @@
         <!-- Recent Activity Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Recent Orders - 2/3 width -->
-            <div class="bg-white rounded-lg border border-gray-200 shadow-soft p-6 lg:col-span-2">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-base font-medium text-gray-900">Recent Orders</h3>
-                    <a href="{{ route('admin.orders') }}" class="text-sm text-primary hover:text-primary-dark">View All</a>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Order ID
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Customer
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Total
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
+        <!-- Recent Orders - 2/3 width -->
+<div class="bg-white rounded-lg border border-gray-200 shadow-soft p-6 lg:col-span-2">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-base font-medium text-gray-900">Recent Orders</h3>
+        <a href="{{ route('admin.orders') }}" class="text-sm text-primary hover:text-primary-dark">View All</a>
+    </div>
+    <div class="overflow-x-auto">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">Order ID</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">Date</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">Status</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">Total</th>
+                            <th scope="col" class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100" id="recent-orders-list">
+                        @forelse($recentOrders as $order)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span class="text-sm font-medium text-primary">#{{ $order->id }}</span>
+                                </td>
+                                
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-gray-900">{{ $order->created_at->format('M d, Y') }}</span>
+                                        <span class="text-xs text-gray-500">{{ $order->created_at->format('h:i A') }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    @php
+                                        $statusClasses = [
+                                            'completed' => [
+                                                'bg' => 'bg-green-50', 
+                                                'text' => 'text-green-700',
+                                                'border' => 'border border-green-200',
+                                                'icon' => 'ri-check-line'
+                                            ],
+                                            'processing' => [
+                                                'bg' => 'bg-blue-50', 
+                                                'text' => 'text-blue-700',
+                                                'border' => 'border border-blue-200',
+                                                'icon' => 'ri-loader-2-line'
+                                            ],
+                                            'shipped' => [
+                                                'bg' => 'bg-indigo-50', 
+                                                'text' => 'text-indigo-700',
+                                                'border' => 'border border-indigo-200',
+                                                'icon' => 'ri-truck-line'
+                                            ],
+                                            'cancelled' => [
+                                                'bg' => 'bg-red-50', 
+                                                'text' => 'text-red-700',
+                                                'border' => 'border border-red-200',
+                                                'icon' => 'ri-close-line'
+                                            ],
+                                            'pending' => [
+                                                'bg' => 'bg-yellow-50', 
+                                                'text' => 'text-yellow-700',
+                                                'border' => 'border border-yellow-200',
+                                                'icon' => 'ri-time-line'
+                                            ],
+                                            'delivered' => [
+                                                'bg' => 'bg-emerald-50', 
+                                                'text' => 'text-emerald-700',
+                                                'border' => 'border border-emerald-200',
+                                                'icon' => 'ri-checkbox-circle-line'
+                                            ],
+                                            'default' => [
+                                                'bg' => 'bg-gray-50', 
+                                                'text' => 'text-gray-700',
+                                                'border' => 'border border-gray-200',
+                                                'icon' => 'ri-information-line'
+                                            ]
+                                        ];
+                                        
+                                        $status = strtolower($order->status);
+                                        $statusClass = $statusClasses[$status] ?? $statusClasses['default'];
+                                    @endphp
+                                    
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium {{ $statusClass['bg'] }} {{ $statusClass['text'] }} {{ $statusClass['border'] }}">
+                                        <i class="{{ $statusClass['icon'] }} mr-1"></i>
+                                        {{ ucfirst($order->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span class="text-sm font-medium text-gray-900">€{{ number_format($order->total_amount, 2) }}</span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-right">
+                                    <div class="flex flex-col sm:flex-row gap-2 justify-end">
+                                        <a href="{{ route('admin.orders.show', $order) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                                            <span>View</span>
+                                            <i class="ri-arrow-right-line ml-2"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="recent-orders-list">
-                            @forelse($recentOrders as $order)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{{ $order->id }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                        {{ $order->user->name ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                        {{ $order->created_at->format('M d, Y') }}
-                                    </td>
-                                    <td class="px-4 py-3   }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        @if($order->status == 'completed')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                Completed
-                                            </span>
-                                        @elseif($order->status == 'pending')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                Pending
-                                            </span>
-                                        @elseif($order->status == 'processing')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                Processing
-                                            </span>
-                                        @elseif($order->status == 'cancelled')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                Cancelled
-                                            </span>
-                                        @else
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                {{ ucfirst($order->status) }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                        €{{ number_format($order->total_amount, 2) }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="{{ route('admin.orders.show', $order) }}" class="text-primary hover:text-primary-dark">View</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-4 py-3 text-center text-sm text-gray-500">
-                                        No recent orders found
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-5 text-center text-sm text-gray-500">
+                                    No recent orders found
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+            @if(empty($recentOrders) || count($recentOrders) === 0)
+                <div class="text-center py-16">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
+                        <i class="ri-shopping-bag-line text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-xl font-medium text-primary mb-3">No orders found</h3>
+                    <p class="text-gray-500 mb-8 max-w-md mx-auto">There are no recent orders to display.</p>
+                    <a href="{{ route('admin.orders.index') }}" class="inline-flex items-center px-6 py-3 border border-primary bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        <i class="ri-refresh-line mr-2"></i> View All Orders
+                    </a>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
 
             <!-- Recent Support Tickets - 1/3 width -->
             <div class="bg-white rounded-lg border border-gray-200 shadow-soft p-6">
@@ -316,286 +357,13 @@
     </div>
 @endsection
 
-
 <script>
-    // Global variables
-    let salesChart;
-    
-    // Initialize Sales Chart
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeSalesChart();
-        
-        // Add event listener for refresh button
-        document.getElementById('refresh-dashboard').addEventListener('click', function() {
-            refreshDashboardData();
-        });
-        
-        // Add event listeners for chart period buttons
-        document.querySelectorAll('.chart-period-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                // Remove active class from all buttons
-                document.querySelectorAll('.chart-period-btn').forEach(btn => {
-                    btn.classList.remove('bg-primary', 'text-white');
-                    btn.classList.add('bg-gray-100', 'text-gray-700');
-                });
-                
-                // Add active class to clicked button
-                this.classList.remove('bg-gray-100', 'text-gray-700');
-                this.classList.add('bg-primary', 'text-white');
-                
-                // Update chart based on selected period
-                updateChartPeriod(this.dataset.period);
-            });
-        });
-    });
-    
-    function initializeSalesChart() {
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        
-        // Chart data from controller
-        const salesLabels = @json($salesData['labels']);
-        const salesValues = @json($salesData['data']);
-        
-        // Create the chart
-        salesChart = new Chart(salesCtx, {
-            type: 'line',
-            data: {
-                labels: salesLabels,
-                datasets: [{
-                    label: 'Sales',
-                    data: salesValues,
-                    borderColor: '#111111',
-                    backgroundColor: 'rgba(17, 17, 17, 0.1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#111111',
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(17, 17, 17, 0.9)',
-                        padding: 10,
-                        cornerRadius: 4,
-                        titleFont: {
-                            size: 12,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            size: 12
-                        },
-                        callbacks: {
-                            label: function(context) {
-                                return '€' + context.raw.toFixed(2);
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 10
-                            },
-                            color: '#6B7280'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        },
-                        ticks: {
-                            font: {
-                                size: 10
-                            },
-                            color: '#6B7280',
-                            callback: function(value) {
-                                return '€' + value;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    // Refresh dashboard data
-    function refreshDashboardData() {
-        // Show loading state
-        const refreshBtn = document.getElementById('refresh-dashboard');
-        const originalContent = refreshBtn.innerHTML;
-        refreshBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i> Refreshing...';
-        refreshBtn.disabled = true;
-        
-        // Fetch updated dashboard data
-        fetch('/admin/dashboard/summary', {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update stats
-            document.getElementById('total-products').textContent = data.totalProducts;
-            document.getElementById('low-stock-products').textContent = data.lowStockProducts;
-            document.getElementById('total-orders').textContent = data.totalOrders;
-            document.getElementById('pending-orders').textContent = data.pendingOrders;
-            document.getElementById('total-customers').textContent = data.totalCustomers;
-            document.getElementById('open-tickets').textContent = data.openTickets;
-            
-            // Update growth indicators
-            updateGrowthIndicator('total-products', data.productGrowth);
-            updateGrowthIndicator('total-orders', data.orderGrowth);
-            updateGrowthIndicator('total-customers', data.customerGrowth);
-            updateGrowthIndicator('open-tickets', data.ticketGrowth, true);
-            
-            // Refresh other components
-            fetchTopProducts();
-            updateChartPeriod('month'); // Refresh chart with current period
-            
-            // Add a subtle highlight effect to show updated data
-            document.querySelectorAll('#stats-container > div').forEach(card => {
-                card.classList.add('bg-green-50');
-                setTimeout(() => {
-                    card.classList.remove('bg-green-50');
-                }, 1000);
-            });
-            
-            // Reset button
-            refreshBtn.innerHTML = originalContent;
-            refreshBtn.disabled = false;
-        })
-        .catch(error => {
-            console.error('Error refreshing dashboard data:', error);
-            refreshBtn.innerHTML = originalContent;
-            refreshBtn.disabled = false;
-            
-            // Show error notification
-            alert('Failed to refresh dashboard data. Please try again.');
-        });
-    }
-    
-    // Helper function to update growth indicators
-    function updateGrowthIndicator(elementId, growthValue, inverse = false) {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-        
-        const growthElement = element.nextElementSibling;
-        if (!growthElement) return;
-        
-        // For tickets, growth is inversed (increase is bad, decrease is good)
-        const isPositive = inverse ? growthValue < 0 : growthValue >= 0;
-        
-        // Update icon and color
-        growthElement.className = `ml-2 text-xs ${isPositive ? 'text-green-600' : 'text-red-600'} flex items-center`;
-        
-        // Update icon
-        const iconElement = growthElement.querySelector('i');
-        if (iconElement) {
-            iconElement.className = isPositive ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line';
-        }
-        
-        // Update text
-        const textNode = growthElement.childNodes[1];
-        if (textNode) {
-            textNode.nodeValue = ` ${Math.abs(growthValue)}% `;
-        }
-    }
-    
-    // Update chart based on selected period
-    function updateChartPeriod(period) {
-        // Show loading state on chart
-        const chartContainer = document.getElementById('salesChart').parentNode;
-        chartContainer.classList.add('opacity-50');
-        
-        // Prepare the request URL based on the period
-        const url = `/admin/dashboard/sales-data?period=${period}`;
-        
-        // Fetch data for the selected period
-        fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update chart with new data
-            salesChart.data.labels = data.labels;
-            salesChart.data.datasets[0].data = data.data;
-            salesChart.update();
-            
-            // Remove loading state
-            chartContainer.classList.remove('opacity-50');
-        })
-        .catch(error => {
-            console.error('Error updating chart data:', error);
-            chartContainer.classList.remove('opacity-50');
-            
-            // Show error notification
-            alert('Failed to update chart data. Please try again.');
-        });
-    }
-    
-    // Fetch top products with AJAX
-    function fetchTopProducts() {
-        const productsList = document.getElementById('top-products-list');
-        productsList.innerHTML = '<div class="flex justify-center items-center py-6"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>';
-        
-        fetch('/admin/dashboard/top-products', {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.length === 0) {
-                productsList.innerHTML = '<div class="text-center py-4"><p class="text-sm text-gray-500">No products found</p></div>';
-                return;
-            }
-            
-            let html = '';
-            data.forEach(product => {
-                html += `
-                <div class="flex items-center space-x-3 p-3 border border-gray-100 rounded-md hover:bg-gray-50">
-                    <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-md overflow-hidden">
-                        ${product.image ? `<img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">` : '<div class="flex items-center justify-center h-full w-full text-gray-400"><i class="ri-image-line"></i></div>'}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">${product.name}</p>
-                        <p class="text-xs text-gray-500">Sales: ${product.total_quantity}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-sm font-medium text-gray-900">€${parseFloat(product.total_sales).toFixed(2)}</p>
-                    </div>
-                </div>
-                `;
-            });
-            
-            productsList.innerHTML = html;
-        })
-        .catch(error => {
-            console.error('Error fetching top products:', error);
-            productsList.innerHTML = '<div class="text-center py-4"><p class="text-sm text-gray-500">Failed to load products</p></div>';
-        });
-    }
+    // Make sales data available to the chart
+    window.salesChartData = @json($salesData ?? ['labels' => [], 'data' => []]);
 </script>
+
+
+
+    <script src="{{ asset('js/admin.js') }}"></script>
+
+

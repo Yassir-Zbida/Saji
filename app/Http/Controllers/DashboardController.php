@@ -84,7 +84,7 @@ class DashboardController extends Controller
         // Get recent orders
         $recentOrders = Order::with('user')
             ->orderBy('created_at', 'desc')
-            ->take(5)
+            ->take(7)
             ->get();
 
         // Get recent tickets
