@@ -24,9 +24,6 @@ class LoginController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-
-    // }
-
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -42,14 +39,11 @@ class LoginController extends Controller
 
             $user = Auth::user();
 
-            if ($user->isAdmin()) {
-                return redirect()->route('dashboard');
-            } elseif ($user->isManager()) {
-                return redirect()->route('dashboard');
+            if ($user->isAdmin() || $user->isManager()) {
+                return redirect('/');
             } elseif ($user->isSupportAgent()) {
                 return redirect()->route('dashboard.tickets.index');
             } else {
-                // Check if there was a redirect from product page
                 if ($request->has('redirect')) {
                     return redirect($request->redirect);
                 }
@@ -62,7 +56,6 @@ class LoginController extends Controller
             'email' => 'The provided credentials do not match our records.',
         ])->withInput($request->except('password'));
     }
-
 
     /**
      * Log the user out.
