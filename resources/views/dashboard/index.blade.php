@@ -186,7 +186,7 @@
 <div class="bg-white rounded-lg border border-gray-200 shadow-soft p-6 lg:col-span-2">
     <div class="flex items-center justify-between mb-6">
         <h3 class="text-base font-medium text-gray-900">Recent Orders</h3>
-        <a href="{{ route('admin.orders') }}" class="text-sm text-primary hover:text-primary-dark">View All</a>
+        <a href="{{ route('orders.index') }}" class="text-sm text-primary hover:text-primary-dark">View All</a>
     </div>
     <div class="overflow-x-auto">
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -275,7 +275,7 @@
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-right">
                                     <div class="flex flex-col sm:flex-row gap-2 justify-end">
-                                        <a href="{{ route('admin.orders.show', $order) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                                        <a href="{{ route('orders.show', $order) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                                             <span>View</span>
                                             <i class="ri-arrow-right-line ml-2"></i>
                                         </a>
@@ -299,7 +299,7 @@
                     </div>
                     <h3 class="text-xl font-medium text-primary mb-3">No orders found</h3>
                     <p class="text-gray-500 mb-8 max-w-md mx-auto">There are no recent orders to display.</p>
-                    <a href="{{ route('admin.orders.index') }}" class="inline-flex items-center px-6 py-3 border border-primary bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    <a href="{{ route('orders.index') }}" class="inline-flex items-center px-6 py-3 border border-primary bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
                         <i class="ri-refresh-line mr-2"></i> View All Orders
                     </a>
                 </div>

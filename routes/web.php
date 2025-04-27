@@ -418,11 +418,11 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // Orders
     Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
     Route::get('/orders/data', [OrdersController::class, 'getOrdersData'])->name('orders.data');
-    Route::get('/orders/{id}', [OrdersController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}', [OrdersController::class, 'show'])->name('orders.show');
     Route::get('/orders/{id}/invoice', [OrdersController::class, 'invoice'])->name('orders.invoice');
     Route::patch('/orders/{id}/status', [OrdersController::class, 'updateStatus'])->name('orders.update-status');
     Route::patch('/orders/{id}/payment', [OrdersController::class, 'updatePaymentStatus'])->name('orders.update-payment');
-
+    // In your admin routes group
 
     
     // Customers
@@ -451,11 +451,11 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 });
 
 
-// Dashboard routes
-Route::prefix('admin/dashboard')->name('admin.dashboard.')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('index');
-    Route::get('/top-products', [DashboardController::class, 'getTopProductsApi'])->name('top-products');
-    Route::get('/summary', [DashboardController::class, 'getDashboardSummary'])->name('summary');
-    Route::get('/sales-data', [DashboardController::class, 'getSalesData'])->name('sales-data');
-    Route::get('/analytics', [DashboardController::class, 'analytics'])->name('analytics');
-});
+// // Dashboard routes
+// Route::prefix('admin/dashboard')->name('admin.dashboard.')->middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/', [DashboardController::class, 'index'])->name('index');
+//     Route::get('/top-products', [DashboardController::class, 'getTopProductsApi'])->name('top-products');
+//     Route::get('/summary', [DashboardController::class, 'getDashboardSummary'])->name('summary');
+//     Route::get('/sales-data', [DashboardController::class, 'getSalesData'])->name('sales-data');
+//     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('analytics');
+// });

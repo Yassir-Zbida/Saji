@@ -294,8 +294,84 @@ class OrdersController extends Controller
      */
     public function show(Order $order)
     {
-        $order->load('user', 'items.product', 'invoice');
+        // Eager load all the relationships we need
+        $order->load(['user', 'items.product', 'invoice']);
+        
+        // Add some additional formatted data for the view
+        $order->formatted_subtotal = '€' . number_format($order->items->sum(function($item) {
+            return $item->price * $item->quantity;
+        }), 2);
+        
+        $order->formatted_shipping = '€' . number_format($order->shipping_cost ?? 0, 2);
+        $order->formatted_tax = '€' . number_format($order->tax_amount ?? 0, 2);
+        $order->formatted_total = '€' . number_format($order->total_amount, 2);
+        
+        if ($order->discount_amount > 0) {
+            $order->formatted_discount = '€' . number_format($order->discount_amount, 2);
+        }
+        
+        // Add customer information
+        if ($order->user) {
+            $order->customer_name = $order->user->name;
+            $order->customer_email = $order->user->email;
+            $order->customer_phone = $order->user->phone;
+            $order->customer_created_at = $order->user->created_at;
+            $order->customer_order_count = Order::where('user_id', $order->user_id)->count();
+        } else {
+            $order->customer_name = 'Guest';
+            $order->customer_email = 'N/A';
+            $order->customer_order_count = 0;
+        }
+        
+        // Format item prices
+        foreach ($order->items as $item) {
+            $item->formatted_price = '€' . number_format($item->price, 2);
+            $item->formatted_total = '€' . number_format($item->price * $item->quantity, 2);
+            $item->product_name = $item->product ? $item->product->name : 'Unknown Product';
+        }
+        
+        // Check if we need to load order history
+        $order->history = $this->getOrderHistory($order);
+        
         return view('dashboard.orders.show', compact('order'));
+    }
+
+    private function getOrderHistory($order)
+    {
+        // This is a placeholder - implement based on your actual history tracking
+        // You might have a separate model for OrderHistory or use created_at timestamps
+        // from status changes
+        
+        $history = collect([]);
+        
+        // Add order creation
+        $history->push((object)[
+            'type' => 'created',
+            'created_at' => $order->created_at,
+            'comment' => 'Order was created'
+        ]);
+        
+        // Add status changes if you track them
+        if ($order->status != 'pending') {
+            $history->push((object)[
+                'type' => 'status_change',
+                'new_status' => $order->status,
+                'created_at' => $order->updated_at,
+                'comment' => 'Order status changed to ' . ucfirst($order->status)
+            ]);
+        }
+        
+        // Add payment status if paid
+        if ($order->payment_status == 'paid') {
+            $history->push((object)[
+                'type' => 'payment',
+                'payment_status' => 'paid',
+                'created_at' => $order->payment_date ?? $order->updated_at,
+                'comment' => 'Payment was received'
+            ]);
+        }
+        
+        return $history->sortByDesc('created_at');
     }
 
     /**
@@ -675,4 +751,4 @@ class OrdersController extends Controller
         
         return response($content, 200, $headers);
     }
-}
+} 

@@ -172,7 +172,7 @@
                 <nav class="flex-1 pt-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
                     <ul class="space-y-1 px-3">
                         <li>
-                            <a href="/"
+                            <a href="{{ route('admin.dashboard') }}"
                                 class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors active">
                                 <i class="ri-dashboard-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Dashboard</span>
@@ -180,7 +180,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="admin/orders"
+                            <a href="{{ route('orders.index') }}"
                                 class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.orders*') ? 'active' : '' }}">
                                 <i class="ri-file-list-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Orders</span>
