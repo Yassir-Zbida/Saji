@@ -399,14 +399,18 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
     
     // Products
-    Route::get('/products', [ProductController::class, 'index'])->name('admin.products');
+    Route::get('/products', [DashboardController::class, 'adminAllProducts'])->name('admin.products');
     Route::get('/products/create', [ProductController::class, 'create'])->name('admin.products.create');
     Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
     Route::patch('/products/{product}/status', [ProductController::class, 'updateStatus']);
-    
+
+    // Add these routes in your admin routes section
+    Route::get('/products/data', [DashboardController::class, 'getProductsData'])->name('admin.products.data');
+    Route::get('/categories/data', [DashboardController::class, 'getCategoriesData'])->name('admin.categories.data');
+
     // Categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('admin.categories.create');
@@ -422,8 +426,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/orders/{id}/invoice', [OrdersController::class, 'invoice'])->name('orders.invoice');
     Route::patch('/orders/{id}/status', [OrdersController::class, 'updateStatus'])->name('orders.update-status');
     Route::patch('/orders/{id}/payment', [OrdersController::class, 'updatePaymentStatus'])->name('orders.update-payment');
-    // In your admin routes group
-
+    Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
     
     // Customers
     Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');

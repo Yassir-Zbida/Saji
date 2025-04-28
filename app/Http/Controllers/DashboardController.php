@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\Category;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -439,4 +441,264 @@ class DashboardController extends Controller
         ));
     }
 
+
+
+    /**
+     * Display a comprehensive listing of all products for admin.
+     * 
+     * @param Request $request
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function adminAllProducts(Request $request)
+    {
+        try {
+            // Check if this is an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return $this->getProductsData($request);
+            }
+
+            // For initial page load, just return the view with minimal data
+            // The actual product data will be loaded via AJAX
+            $categories = Category::all();
+
+            // Get basic stats for initial page load
+            $totalProducts = Product::count();
+            $lowStockProducts = Product::where('quantity', '<=', 5)->count();
+            $activeProducts = Product::where('is_active', true)->count();
+
+            return view('dashboard.products.index', compact('categories', 'totalProducts', 'lowStockProducts', 'activeProducts'));
+        } catch (\Exception $e) {
+            // Log the error
+            \Log::error('Error in adminAllProducts: ' . $e->getMessage());
+
+            // If AJAX request, return error response
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'An error occurred while loading products. Please try again.',
+                    'details' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+
+            // For regular request, flash error message and return view
+            return view('dashboard.products.index')->withErrors(['error' => 'An error occurred while loading products. Please try again.']);
+        }
+    }
+
+    /**
+ * Get products data for AJAX request in admin dashboard
+ * 
+ * @param Request $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function getProductsData(Request $request)
+{
+    try {
+        // Start with a base query
+        $query = DB::table('products')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+            ->select(
+                'products.id',
+                'products.name',
+                'products.description',
+                'products.price',
+                'products.quantity',
+                'products.sku',
+                'products.is_active',
+                'products.created_at',
+                'products.image',
+                'categories.name as category_name',
+                'categories.id as category_id'
+            );
+            
+        // Apply filters
+        if ($request->has('category') && $request->category != '') {
+            $query->where('products.category_id', $request->category);
+        }
+
+        if ($request->has('status') && $request->status != '') {
+            if ($request->status === 'active') {
+                $query->where('products.is_active', true);
+            } elseif ($request->status === 'inactive') {
+                $query->where('products.is_active', false);
+            }
+        }
+
+        if ($request->has('stock_status') && $request->stock_status != '') {
+            if ($request->stock_status === 'in_stock') {
+                $query->where('products.quantity', '>', 0);
+            } elseif ($request->stock_status === 'out_of_stock') {
+                $query->where('products.quantity', 0);
+            } elseif ($request->stock_status === 'low_stock') {
+                // Use a fixed threshold of 5
+                $query->where('products.quantity', '>', 0)
+                      ->where('products.quantity', '<=', 5);
+            }
+        }
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.description', 'like', "%{$search}%")
+                  ->orWhere('products.sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Sort products
+        $sortField = $request->input('sort', 'products.created_at');
+        if ($sortField === 'name') $sortField = 'products.name';
+        if ($sortField === 'price') $sortField = 'products.price';
+        if ($sortField === 'quantity') $sortField = 'products.quantity';
+        if ($sortField === 'created_at') $sortField = 'products.created_at';
+        
+        $sortDirection = $request->input('direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate the results
+        $perPage = $request->input('per_page', 10);
+        $products = $query->paginate($perPage);
+
+        // Get product images separately - ONLY using image_path column
+        $productImages = [];
+        if (Schema::hasTable('product_images')) {
+            $productIds = collect($products->items())->pluck('id')->toArray();
+            
+            // Only select image_path, not path
+            $productImages = DB::table('product_images')
+                ->whereIn('product_id', $productIds)
+                ->select('product_id', 'image_path')
+                ->get()
+                ->groupBy('product_id');
+        }
+
+        // Transform the data
+        $transformedProducts = collect($products->items())->map(function ($product) use ($productImages) {
+            // Convert to array for easier manipulation
+            $productArray = (array) $product;
+            
+            // Add image URL - only using image_path
+            if (isset($productImages[$product->id]) && count($productImages[$product->id]) > 0) {
+                $imagePath = $productImages[$product->id][0]->image_path;
+                $productArray['image_url'] = $imagePath ? asset('storage/' . $imagePath) : asset('images/placeholder-product.jpg');
+            } else {
+                $productArray['image_url'] = $product->image ? asset('storage/' . $product->image) : asset('images/placeholder-product.jpg');
+            }
+            
+            // Format price for display
+            $productArray['formatted_price'] = number_format($product->price, 2);
+            
+            // Add stock status label
+            if ($product->quantity <= 0) {
+                $productArray['stock_status_label'] = 'Out of Stock';
+                $productArray['stock_status_class'] = 'bg-red-100 text-red-800';
+            } elseif ($product->quantity <= 5) { // Using fixed threshold of 5
+                $productArray['stock_status_label'] = 'Low Stock';
+                $productArray['stock_status_class'] = 'bg-yellow-100 text-yellow-800';
+            } else {
+                $productArray['stock_status_label'] = 'In Stock';
+                $productArray['stock_status_class'] = 'bg-green-100 text-green-800';
+            }
+            
+            // Add category object for compatibility
+            $productArray['category'] = (object) [
+                'id' => $product->category_id,
+                'name' => $product->category_name
+            ];
+            
+            return (object) $productArray;
+        });
+
+        // Replace the items in the paginator
+        $products->setCollection($transformedProducts);
+
+        // Get statistics
+        $totalProducts = DB::table('products')->count();
+        $lowStockProducts = DB::table('products')
+            ->where('quantity', '>', 0)
+            ->where('quantity', '<=', 5)
+            ->count();
+        $activeProducts = DB::table('products')->where('is_active', true)->count();
+        
+        // Get category count
+        $categoryCount = DB::table('categories')->count();
+        
+        // Get top category
+        $topCategory = DB::table('categories')
+            ->leftJoin('products', 'categories.id', '=', 'products.category_id')
+            ->select('categories.name', DB::raw('count(products.id) as product_count'))
+            ->groupBy('categories.id', 'categories.name')
+            ->orderBy('product_count', 'desc')
+            ->first();
+            
+        $topCategoryName = $topCategory ? $topCategory->name : 'None';
+        
+        // Calculate product growth (simplified)
+        $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
+        $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+        $currentMonthStart = Carbon::now()->startOfMonth();
+
+        $lastMonthProducts = DB::table('products')
+            ->where('created_at', '>=', $lastMonthStart)
+            ->where('created_at', '<=', $lastMonthEnd)
+            ->count();
+        $currentMonthProducts = DB::table('products')
+            ->where('created_at', '>=', $currentMonthStart)
+            ->count();
+        $productGrowth = $lastMonthProducts > 0
+            ? round(($currentMonthProducts - $lastMonthProducts) / $lastMonthProducts * 100)
+            : 0;
+
+        return response()->json([
+            'products' => $products,
+            'stats' => [
+                'totalProducts' => $totalProducts,
+                'lowStockProducts' => $lowStockProducts,
+                'activeProducts' => $activeProducts,
+                'categoryCount' => $categoryCount,
+                'topCategory' => $topCategoryName,
+                'productGrowth' => $productGrowth
+            ]
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error in getProductsData: ' . $e->getMessage());
+        \Log::error($e->getTraceAsString());
+        
+        return response()->json([
+            'error' => true,
+            'message' => 'An error occurred while loading products. Please try again.',
+            'details' => config('app.debug') ? $e->getMessage() : null,
+            'trace' => config('app.debug') ? $e->getTraceAsString() : null
+        ], 500);
+    }
 }
+    public function getCategoriesData()
+    {
+        try {
+            // Direct database query
+            $categories = DB::table('categories')
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get();
+
+            return response()->json($categories);
+        } catch (\Exception $e) {
+            \Log::error('Error in getCategoriesData: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'error' => true,
+                'message' => 'An error occurred while loading categories.',
+                'details' => config('app.debug') ? $e->getMessage() : null,
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
+        }
+    }
+
+
+
+
+
+}
+
+

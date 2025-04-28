@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - @yield('title', 'Dashboard')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <!-- Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -17,7 +16,6 @@
         href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
         rel="stylesheet">
 
-    @vite(['resources/css/admin.css', 'resources/js/admin.js'])
 
     <script>
         tailwind.config = {
@@ -173,7 +171,7 @@
                     <ul class="space-y-1 px-3">
                         <li>
                             <a href="{{ route('admin.dashboard') }}"
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors active">
+                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                                 <i class="ri-dashboard-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Dashboard</span>
                                 <span class="tooltip-text" x-show="sidebarCollapsed">Dashboard</span>
@@ -181,7 +179,7 @@
                         </li>
                         <li>
                             <a href="{{ route('orders.index') }}"
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.orders*') ? 'active' : '' }}">
+                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('orders.*') ? 'active' : '' }}">
                                 <i class="ri-file-list-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Orders</span>
                                 <span class="ml-auto bg-gray-100 text-gray-700 nav-badge nav-text">30</span>
@@ -189,8 +187,8 @@
                             </a>
                         </li>
                         <li>
-                            <a href="/"
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.products*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.products') }}"
+                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                                 <i class="ri-shopping-bag-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Products</span>
                                 <span class="tooltip-text" x-show="sidebarCollapsed">Products</span>
