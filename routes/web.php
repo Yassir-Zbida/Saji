@@ -409,6 +409,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/products/data', [DashboardController::class, 'getProductsData'])->name('admin.products.data');
     Route::get('/categories/data', [DashboardController::class, 'getCategoriesData'])->name('admin.categories.data');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+    Route::get('/products/export', [App\Http\Controllers\DashboardController::class, 'exportProducts'])->name('admin.products.export');
 
     // Categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');

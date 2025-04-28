@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Category;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Response;
 
 class DashboardController extends Controller
 {
@@ -24,7 +25,7 @@ class DashboardController extends Controller
     {
         // Données de base du tableau de bord - toutes dynamiques
         $totalProducts = Product::count();
-        $lowStockProducts = Product::where('quantity', '<=', 5)->count();
+        $lowStockProducts = Product::where('quantity', '>', 0)->where('quantity', '<=', 5)->count();
         $totalOrders = Order::count();
         $pendingOrders = Order::where('status', 'pending')->count();
         $totalCustomers = User::where('role', 'customer')->count();
@@ -175,7 +176,7 @@ class DashboardController extends Controller
     {
         // Données de base
         $totalProducts = Product::count();
-        $lowStockProducts = Product::where('quantity', '<=', 5)->count();
+        $lowStockProducts = Product::where('quantity', '>', 0)->where('quantity', '<=', 5)->count();
         $totalOrders = Order::count();
         $pendingOrders = Order::where('status', 'pending')->count();
         $totalCustomers = User::where('role', 'customer')->count();
@@ -695,10 +696,121 @@ public function getProductsData(Request $request)
         }
     }
 
+    /**
+     * Export products to CSV
+     * 
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function exportProducts(Request $request)
+    {
+        try {
+            // Start with a base query
+            $query = DB::table('products')
+                ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                ->select(
+                    'products.id',
+                    'products.name',
+                    'products.sku',
+                    'products.description',
+                    'products.price',
+                    'products.quantity',
+                    'products.is_active',
+                    'products.created_at',
+                    'categories.name as category_name'
+                );
+            
+            // Apply the same filters as in the getProductsData method
+            if ($request->has('category') && $request->category != '') {
+                $query->where('products.category_id', $request->category);
+            }
 
+            if ($request->has('status') && $request->status != '') {
+                if ($request->status === 'active') {
+                    $query->where('products.is_active', true);
+                } elseif ($request->status === 'inactive') {
+                    $query->where('products.is_active', false);
+                }
+            }
 
+            if ($request->has('stock_status') && $request->stock_status != '') {
+                if ($request->stock_status === 'in_stock') {
+                    $query->where('products.quantity', '>', 0);
+                } elseif ($request->stock_status === 'out_of_stock') {
+                    $query->where('products.quantity', 0);
+                } elseif ($request->stock_status === 'low_stock') {
+                    $query->where('products.quantity', '>', 0)
+                          ->where('products.quantity', '<=', 5);
+                }
+            }
 
+            if ($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('products.name', 'like', "%{$search}%")
+                      ->orWhere('products.description', 'like', "%{$search}%")
+                      ->orWhere('products.sku', 'like', "%{$search}%");
+                });
+            }
 
+            // Sort products
+            $sortField = $request->input('sort', 'products.created_at');
+            if ($sortField === 'name') $sortField = 'products.name';
+            if ($sortField === 'price') $sortField = 'products.price';
+            if ($sortField === 'quantity') $sortField = 'products.quantity';
+            if ($sortField === 'created_at') $sortField = 'products.created_at';
+            
+            $sortDirection = $request->input('direction', 'desc');
+            $query->orderBy($sortField, $sortDirection);
+
+            // Get all products (no pagination for export)
+            $products = $query->get();
+
+            // Create CSV file
+            $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
+            $handle = fopen($filename, 'w+');
+            
+            // Add CSV headers
+            fputcsv($handle, [
+                'ID', 
+                'Name', 
+                'SKU', 
+                'Category', 
+                'Description', 
+                'Price', 
+                'Quantity', 
+                'Status', 
+                'Created At'
+            ]);
+            
+            // Add product data
+            foreach($products as $product) {
+                fputcsv($handle, [
+                    $product->id,
+                    $product->name,
+                    $product->sku,
+                    $product->category_name,
+                    $product->description,
+                    $product->price,
+                    $product->quantity,
+                    $product->is_active ? 'Active' : 'Inactive',
+                    $product->created_at
+                ]);
+            }
+            
+            fclose($handle);
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ];
+            
+            return Response::download($filename, $filename, $headers)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            \Log::error('Error in exportProducts: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return back()->withErrors(['error' => 'An error occurred while exporting products. Please try again.']);
+        }
+    }
 }
-
-
