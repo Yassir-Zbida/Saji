@@ -73,10 +73,10 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
-        $attributes = ProductAttribute::with('attributeValues')->get();
+        $attributes = ProductAttribute::with('values')->get();
         $tags = Tag::all();
         
-        return view('products.create', compact('categories', 'attributes', 'tags'));
+        return view('dashboard.products.create', compact('categories', 'attributes', 'tags'));
     }
 
     /**
@@ -206,7 +206,7 @@ class ProductController extends Controller
     {
         $product->load('images', 'attributeValues', 'tags');
         $categories = Category::all();
-        $attributes = ProductAttribute::with('attributeValues')->get();
+        $attributes = ProductAttribute::with('values')->get();
         $tags = Tag::all();
         
         return view('products.edit', compact('product', 'categories', 'attributes', 'tags'));
