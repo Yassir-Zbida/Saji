@@ -247,9 +247,9 @@ class ProductController extends Controller
                 // 'dimensions.height' => 'nullable|numeric|min:0',
                 'featured' => 'nullable|boolean',
                 'is_active' => 'nullable|boolean',
-                'meta_title' => 'nullable|string|max:255',
-                'meta_description' => 'nullable|string|max:500',
-                'meta_keywords' => 'nullable|string|max:255',
+                // 'meta_title' => 'nullable|string|max:255',
+                // 'meta_description' => 'nullable|string|max:500',
+                // 'meta_keywords' => 'nullable|string|max:255',
                 'images' => 'nullable|array',
                 'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                 'attributes' => 'nullable|array',
@@ -280,9 +280,6 @@ class ProductController extends Controller
                 'sku' => $request->sku,
                 'quantity' => $request->stock_quantity, // Notez que le modèle utilise 'quantity' et non 'stock_quantity'
                 'is_active' => $request->has('is_active') ? 1 : 0,
-                'meta_title' => $request->meta_title,
-                'meta_description' => $request->meta_description,
-                'meta_keywords' => $request->meta_keywords,
                 // Retirez temporairement les colonnes manquantes
                 // 'weight' => $request->weight,
                 // 'length' => $request->dimensions['length'] ?? null,
@@ -346,9 +343,9 @@ class ProductController extends Controller
             // Vérification du stock et notification
             if ($product->quantity <= ($request->stock_alert_threshold ?? 5)) {
                 $admins = \App\Models\User::where('role', 'admin')->get();
-                foreach ($admins as $admin) {
-                    $admin->notify(new LowStockNotification($product));
-                }
+                // foreach ($admins as $admin) {
+                //     $admin->notify(new LowStockNotification($product));
+                // }
             }
 
             return redirect()->route('admin.products')
@@ -481,7 +478,8 @@ class ProductController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Image supprimée avec succès.'
+                'message' => 'Image supprimée avec succès.',
+                'redirect_url' => route('admin.products')
             ]);
         } catch (\Exception $e) {
             return response()->json([
