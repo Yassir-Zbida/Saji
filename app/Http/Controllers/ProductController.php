@@ -357,7 +357,7 @@ class ProductController extends Controller
     {
         // Check if product has any orders
         if ($product->orderItems()->count() > 0) {
-            return redirect()->route('products.index')
+            return redirect()->route('admin.products')
                 ->with('error', 'Impossible de supprimer ce produit car il est associé à des commandes.');
         }
 
@@ -378,11 +378,11 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('products.index')
+            return redirect()->route('admin.products')
                 ->with('success', 'Produit supprimé avec succès.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('products.index')
+            return redirect()->route('admin.products')
                 ->with('error', 'Une erreur est survenue lors de la suppression du produit: ' . $e->getMessage());
         }
     }

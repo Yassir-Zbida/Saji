@@ -580,9 +580,9 @@ public function getProductsData(Request $request)
             // Add image URL - only using image_path
             if (isset($productImages[$product->id]) && count($productImages[$product->id]) > 0) {
                 $imagePath = $productImages[$product->id][0]->image_path;
-                $productArray['image_url'] = $imagePath ? asset('storage/' . $imagePath) : asset('images/placeholder-product.jpg');
+                $productArray['image_url'] = $imagePath ? asset('images/' . $imagePath) : asset('images/placeholder.jpg');
             } else {
-                $productArray['image_url'] = $product->image ? asset('storage/' . $product->image) : asset('images/placeholder-product.jpg');
+                $productArray['image_url'] = $product->image ? asset('images/' . $product->image) : asset('images/placeholder.jpg');
             }
             
             // Format price for display

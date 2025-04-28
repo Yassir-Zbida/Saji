@@ -406,10 +406,9 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
     Route::patch('/products/{product}/status', [ProductController::class, 'updateStatus']);
-
-    // Add these routes in your admin routes section
     Route::get('/products/data', [DashboardController::class, 'getProductsData'])->name('admin.products.data');
     Route::get('/categories/data', [DashboardController::class, 'getCategoriesData'])->name('admin.categories.data');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
 
     // Categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');

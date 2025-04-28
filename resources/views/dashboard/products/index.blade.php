@@ -249,7 +249,7 @@
                                 class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
                                 Status</th>
                             <th scope="col"
-                                class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                                class="px-6 hidden py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
                                 Added On</th>
                             <th scope="col"
                                 class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
@@ -262,13 +262,13 @@
                                 <td class="px-6 py-5">
                                     <div class="flex items-center">
                                         <div
-                                            class="h-12 w-12 rounded-md bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden">
-                                            <img :src="product.image_url || '/images/placeholder-product.jpg'"
-                                                alt="" class="h-full w-full object-cover object-center">
+                                            class="h-14 w-14 rounded-md bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden">
+                                            <img :src="product.image_url || '/images/placeholder.jpg'" alt=""
+                                                class="h-full w-full object-cover object-center">
                                         </div>
                                         <div class="ml-4">
                                             <span class="text-sm font-medium text-gray-900" x-text="product.name"></span>
-                                            <p class="text-xs text-gray-500 mt-1 truncate max-w-xs"
+                                            <p class="text-xs hidden text-gray-500 mt-1 truncate max-w-xs"
                                                 x-text="product.description ? (product.description.length > 60 ? product.description.substring(0, 60) + '...' : product.description) : '-'">
                                             </p>
                                         </div>
@@ -305,7 +305,7 @@
                                         <span x-text="product.is_active ? 'Active' : 'Inactive'"></span>
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 whitespace-nowrap">
+                                <td class="px-6 py-5 hidden whitespace-nowrap">
                                     <span class="text-sm text-gray-500" x-text="formatDate(product.created_at)"></span>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-right">
@@ -320,6 +320,12 @@
                                             <i class="ri-eye-line mr-1"></i>
                                             View
                                         </a>
+
+                                        <button @click="confirmDelete(product)"
+                                            class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                                            <i class="ri-delete-bin-line mr-1"></i>
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -392,9 +398,9 @@
                                 <button @click="goToPage(page)"
                                     class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50"
                                     :class="page === currentPage ?
-                                        'z-10 bg-primary text-white border-primary hover:bg-primary/90' :
+                                        'z-10 bg-primary text-white border-primary hover:text-black ' :
                                         'text-gray-500'">
-                                    <span x-text="page"></span>
+                                    <span x-text="page" class="text-black"></span>
                                 </button>
                             </template>
                             <button @click="nextPage()" :disabled="currentPage === lastPage"
@@ -461,82 +467,82 @@
             },
 
             fetchCategories() {
-    fetch('/admin/categories/data', {
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (!data.error) {
-            this.categories = data;
-        } else {
-            console.error('Error fetching categories:', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching categories:', error);
-    });
-},
+                fetch('/admin/categories/data', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.error) {
+                            this.categories = data;
+                        } else {
+                            console.error('Error fetching categories:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching categories:', error);
+                    });
+            },
 
-fetchProducts() {
-    this.isLoading = true;
+            fetchProducts() {
+                this.isLoading = true;
 
-    // Build the query string
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', this.currentPage);
+                // Build the query string
+                const queryParams = new URLSearchParams();
+                queryParams.append('page', this.currentPage);
 
-    for (const [key, value] of Object.entries(this.filters)) {
-        if (value) {
-            queryParams.append(key, value);
-        }
-    }
+                for (const [key, value] of Object.entries(this.filters)) {
+                    if (value) {
+                        queryParams.append(key, value);
+                    }
+                }
 
-    fetch(`/admin/products/data?${queryParams.toString()}`, {
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (!data.error) {
-            this.products = data.products.data;
-            this.pagination = {
-                current_page: data.products.current_page,
-                per_page: data.products.per_page,
-                total: data.products.total,
-                last_page: data.products.last_page
-            };
-            this.stats = {
-                totalProducts: data.stats.totalProducts,
-                lowStockProducts: data.stats.lowStockProducts,
-                activeProducts: data.stats.activeProducts,
-                categoryCount: data.stats.categoryCount,
-                topCategory: data.stats.topCategory,
-                productGrowth: data.stats.productGrowth
-            };
-        } else {
-            console.error('Error fetching products:', data.message);
-        }
-        this.isLoading = false;
-    })
-    .catch(error => {
-        console.error('Error fetching products:', error);
-        this.isLoading = false;
-    });
-},
+                fetch(`/admin/products/data?${queryParams.toString()}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.error) {
+                            this.products = data.products.data;
+                            this.pagination = {
+                                current_page: data.products.current_page,
+                                per_page: data.products.per_page,
+                                total: data.products.total,
+                                last_page: data.products.last_page
+                            };
+                            this.stats = {
+                                totalProducts: data.stats.totalProducts,
+                                lowStockProducts: data.stats.lowStockProducts,
+                                activeProducts: data.stats.activeProducts,
+                                categoryCount: data.stats.categoryCount,
+                                topCategory: data.stats.topCategory,
+                                productGrowth: data.stats.productGrowth
+                            };
+                        } else {
+                            console.error('Error fetching products:', data.message);
+                        }
+                        this.isLoading = false;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching products:', error);
+                        this.isLoading = false;
+                    });
+            },
 
             get productsCount() {
                 return this.products.length;
@@ -653,6 +659,35 @@ fetchProducts() {
                     });
             },
 
+            // Add this function to your productsData() Alpine.js component
+confirmDelete(product) {
+    if (confirm(`Are you sure you want to delete the product "${product.name}"? This action cannot be undone.`)) {
+        // Create a form dynamically to submit a DELETE request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/products/${product.id}`;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Add method spoofing for DELETE
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        // Append form to document body and submit
+        document.body.appendChild(form);
+        form.submit();
+    }
+},
+
             applyFilters() {
                 this.currentPage = 1;
                 this.fetchProducts();
@@ -738,4 +773,10 @@ fetchProducts() {
             }
         }
     }
+
+
+
+    
+
+
 </script>
