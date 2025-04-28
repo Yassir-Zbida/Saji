@@ -16,7 +16,7 @@ class ProductImage extends Model
      */
     protected $fillable = [
         'product_id',
-        'path',
+        'image_path',
         'alt',
         'is_primary',
         'position',
@@ -80,6 +80,6 @@ class ProductImage extends Model
      */
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->path);
+        return asset('storage/' . $this->image_path);
     }
 }

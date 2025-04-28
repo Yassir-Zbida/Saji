@@ -25,6 +25,7 @@ class Product extends Model
         'quantity',
         'category_id',
         'image',
+        'gallery',
         'is_active',
         'is_featured',
         'meta_title',
@@ -314,7 +315,7 @@ class Product extends Model
         $primaryImage = $this->images()->where('is_primary', true)->first();
 
         if ($primaryImage) {
-            return asset('storage/' . $primaryImage->path);
+            return asset('storage/' . $primaryImage->image_path);
         }
 
         return $this->image ? asset('storage/' . $this->image) : asset('images/placeholder.jpg');

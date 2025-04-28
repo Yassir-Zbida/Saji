@@ -263,8 +263,7 @@
                                     <div class="flex items-center">
                                         <div
                                             class="h-14 w-14 rounded-md bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden">
-                                            <img :src="product.image_url || '/images/placeholder.jpg'" alt=""
-                                                class="h-full w-full object-cover object-center">
+                                            <img :src="product.image_url || '/images/placeholder.jpg'" alt="" class="h-full w-full object-cover object-center">
                                         </div>
                                         <div class="ml-4">
                                             <span class="text-sm font-medium text-gray-900" x-text="product.name"></span>

@@ -24,6 +24,11 @@ use App\Http\Controllers\AddressController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\OrdersController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\ContentController;
+use App\Http\Controllers\MarketingController;
+use App\Http\Controllers\DiscountController;
 
 
 

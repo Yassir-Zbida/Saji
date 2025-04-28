@@ -8,6 +8,61 @@
         <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="product-form" class="space-y-6">
             @csrf
             
+            <!-- Affichage des erreurs de validation -->
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="ri-error-warning-line text-red-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Veuillez corriger les erreurs suivantes:
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <ul class="list-disc pl-5 space-y-1">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Affichage des messages de succès -->
+            @if (session('success'))
+                <div class="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="ri-checkbox-circle-line text-green-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800">
+                                {{ session('success') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Affichage des messages d'erreur -->
+            @if (session('error'))
+                <div class="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="ri-error-warning-line text-red-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-red-800">
+                                {{ session('error') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+            
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                 <div>
                     <h1 class="text-2xl font-semibold text-gray-900">Create Product</h1>
@@ -43,7 +98,7 @@
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
                                     Product Name <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" name="name" id="name" required autofocus
+                                <input type="text" name="name" id="name" required autofocus value="{{ old('name') }}"
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                     placeholder="Enter product name">
                                 @error('name')
@@ -58,7 +113,7 @@
                                 </label>
                                 <textarea name="description" id="description" rows="5" 
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                                    placeholder="Enter detailed product description"></textarea>
+                                    placeholder="Enter detailed product description">{{ old('description') }}</textarea>
                                 @error('description')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -71,7 +126,7 @@
                                 </label>
                                 <textarea name="short_description" id="short_description" rows="2" 
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                                    placeholder="Enter a brief summary (displayed in listings)"></textarea>
+                                    placeholder="Enter a brief summary (displayed in listings)">{{ old('short_description') }}</textarea>
                                 <p class="mt-1 text-xs text-gray-500">Maximum 500 characters</p>
                                 @error('short_description')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -87,7 +142,9 @@
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
                                     <option value="">Select a category</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 @error('category_id')
@@ -115,7 +172,7 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <span class="text-gray-500">€</span>
                                         </div>
-                                        <input type="number" name="price" id="price" required step="0.01" min="0"
+                                        <input type="number" name="price" id="price" required step="0.01" min="0" value="{{ old('price') }}"
                                             class="block w-full pl-7 px-4 py-3 border rounded-md border-gray-200 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" 
                                             placeholder="0.00">
                                     </div>
@@ -133,7 +190,7 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <span class="text-gray-500">€</span>
                                         </div>
-                                        <input type="number" name="sale_price" id="sale_price" step="0.01" min="0"
+                                        <input type="number" name="sale_price" id="sale_price" step="0.01" min="0" value="{{ old('sale_price') }}"
                                             class="block w-full pl-7 px-4 py-3 rounded-md border border-gray-200 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" 
                                             placeholder="0.00">
                                     </div>
@@ -148,7 +205,7 @@
                                 <label for="sku" class="block text-sm font-medium text-gray-700 mb-1">
                                     SKU
                                 </label>
-                                <input type="text" name="sku" id="sku" 
+                                <input type="text" name="sku" id="sku" value="{{ old('sku') }}"
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                     placeholder="Enter unique product SKU (leave empty for auto-generation)">
                                 <p class="mt-1 text-xs text-gray-500">Leave empty to auto-generate</p>
@@ -164,7 +221,7 @@
                                     <label for="stock_quantity" class="block text-sm font-medium text-gray-700 mb-1">
                                         Stock Quantity
                                     </label>
-                                    <input type="number" name="stock_quantity" id="stock_quantity" min="0" step="1" value="0"
+                                    <input type="number" name="stock_quantity" id="stock_quantity" min="0" step="1" value="{{ old('stock_quantity', 0) }}"
                                         class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                         placeholder="0">
                                     @error('stock_quantity')
@@ -179,9 +236,9 @@
                                     </label>
                                     <select name="stock_status" id="stock_status" required
                                         class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
-                                        <option value="in_stock">In Stock</option>
-                                        <option value="out_of_stock">Out of Stock</option>
-                                        <option value="on_backorder">On Backorder</option>
+                                        <option value="in_stock" {{ old('stock_status') == 'in_stock' ? 'selected' : '' }}>In Stock</option>
+                                        <option value="out_of_stock" {{ old('stock_status') == 'out_of_stock' ? 'selected' : '' }}>Out of Stock</option>
+                                        <option value="on_backorder" {{ old('stock_status') == 'on_backorder' ? 'selected' : '' }}>On Backorder</option>
                                     </select>
                                     @error('stock_status')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -193,7 +250,7 @@
                                     <label for="stock_alert_threshold" class="block text-sm font-medium text-gray-700 mb-1">
                                         Low Stock Alert
                                     </label>
-                                    <input type="number" name="stock_alert_threshold" id="stock_alert_threshold" min="0" step="1" value="5"
+                                    <input type="number" name="stock_alert_threshold" id="stock_alert_threshold" min="0" step="1" value="{{ old('stock_alert_threshold', 5) }}"
                                         class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                         placeholder="5">
                                     @error('stock_alert_threshold')
@@ -218,7 +275,7 @@
                                     <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">
                                         Weight (kg)
                                     </label>
-                                    <input type="number" name="weight" id="weight" step="0.01" min="0"
+                                    <input type="number" name="weight" id="weight" step="0.01" min="0" value="{{ old('weight') }}"
                                         class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                         placeholder="0.00">
                                     @error('weight')
@@ -231,7 +288,7 @@
                                     <label for="dimensions[length]" class="block text-sm font-medium text-gray-700 mb-1">
                                         Length (cm)
                                     </label>
-                                    <input type="number" name="dimensions[length]" id="dimensions_length" step="0.1" min="0"
+                                    <input type="number" name="dimensions[length]" id="dimensions_length" step="0.1" min="0" value="{{ old('dimensions.length') }}"
                                         class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                         placeholder="0.0">
                                     @error('dimensions.length')
@@ -243,7 +300,7 @@
                                     <label for="dimensions[width]" class="block text-sm font-medium text-gray-700 mb-1">
                                         Width (cm)
                                     </label>
-                                    <input type="number" name="dimensions[width]" id="dimensions_width" step="0.1" min="0"
+                                    <input type="number" name="dimensions[width]" id="dimensions_width" step="0.1" min="0" value="{{ old('dimensions.width') }}"
                                         class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                         placeholder="0.0">
                                     @error('dimensions.width')
@@ -255,7 +312,7 @@
                                     <label for="dimensions[height]" class="block text-sm font-medium text-gray-700 mb-1">
                                         Height (cm)
                                     </label>
-                                    <input type="number" name="dimensions[height]" id="dimensions_height" step="0.1" min="0"
+                                    <input type="number" name="dimensions[height]" id="dimensions_height" step="0.1" min="0" value="{{ old('dimensions.height') }}"
                                         class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                         placeholder="0.0">
                                     @error('dimensions.height')
@@ -377,6 +434,7 @@
                                                         <input type="checkbox" name="attributes[{{ $attribute->id }}][]" 
                                                             id="attr_{{ $attribute->id }}_{{ $value->id }}" 
                                                             value="{{ $value->id }}"
+                                                            {{ in_array($value->id, old("attributes.{$attribute->id}", [])) ? 'checked' : '' }}
                                                             class="h-4 w-4 text-primary focus:ring-primary border-gray-200 rounded">
                                                         <label for="attr_{{ $attribute->id }}_{{ $value->id }}" 
                                                             class="ml-2 block text-sm text-gray-700">
@@ -407,7 +465,9 @@
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($tags as $tag)
                                         <label class="inline-flex items-center px-3 py-1.5 border border-gray-200 rounded-full text-sm cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                            <input type="checkbox" name="tags[]" value="{{ $tag->id }}" class="h-4 w-4 mr-2 text-primary focus:ring-primary border-gray-200 rounded">
+                                            <input type="checkbox" name="tags[]" value="{{ $tag->id }}" 
+                                                {{ in_array($tag->id, old('tags', [])) ? 'checked' : '' }}
+                                                class="h-4 w-4 mr-2 text-primary focus:ring-primary border-gray-200 rounded">
                                             {{ $tag->name }}
                                         </label>
                                     @endforeach
@@ -439,7 +499,7 @@
                                 <label for="meta_title" class="block text-sm font-medium text-gray-700 mb-1">
                                     Meta Title
                                 </label>
-                                <input type="text" name="meta_title" id="meta_title" 
+                                <input type="text" name="meta_title" id="meta_title" value="{{ old('meta_title') }}"
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                     placeholder="Enter meta title">
                                 @error('meta_title')
@@ -454,7 +514,7 @@
                                 </label>
                                 <textarea name="meta_description" id="meta_description" rows="3" 
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                                    placeholder="Enter meta description"></textarea>
+                                    placeholder="Enter meta description">{{ old('meta_description') }}</textarea>
                                 @error('meta_description')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -465,7 +525,7 @@
                                 <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-1">
                                     Meta Keywords
                                 </label>
-                                <input type="text" name="meta_keywords" id="meta_keywords" 
+                                <input type="text" name="meta_keywords" id="meta_keywords" value="{{ old('meta_keywords') }}"
                                     class="block w-full px-4 py-3 rounded-md border border-gray-200 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                                     placeholder="keyword1, keyword2, keyword3">
                                 <p class="mt-1 text-xs text-gray-500">Separate keywords with commas</p>
@@ -511,6 +571,7 @@
                                     </label>
                                     <div class="relative inline-block w-11 mr-2 align-middle select-none">
                                         <input type="checkbox" name="featured" id="featured" value="1"
+                                            {{ old('featured') ? 'checked' : '' }}
                                             class="absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 duration-200 ease-in checked:border-primary right-6"
                                         />
                                         <label for="featured" class="block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
@@ -593,13 +654,13 @@
     </div>
 @endsection
 
-@section('scripts')
 <script>
     function productFormData() {
         return {
             init() {
                 // Initialize Alpine.js data for the form
                 this.setupFormSubmit();
+                console.log('Form initialized');
             },
             
             setupFormSubmit() {
@@ -608,6 +669,8 @@
                 
                 // Add event listener for form submission
                 form.addEventListener('submit', function(e) {
+                    console.log('Form submitted');
+                    
                     // Show loading state or disable submit button if needed
                     const submitButtons = form.querySelectorAll('button[type="submit"]');
                     submitButtons.forEach(button => {
@@ -629,4 +692,4 @@
         }
     }
 </script>
-@endsection
+
