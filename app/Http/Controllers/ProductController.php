@@ -226,6 +226,7 @@ class ProductController extends Controller
     {
         \Log::info('Méthode update appelée');
         \Log::info('Données de la requête:', $request->all());
+        \Log::info('Images existantes:', ['count' => $product->images()->count()]);
 
         try {
             $validated = $request->validate([
@@ -239,19 +240,9 @@ class ProductController extends Controller
                 'stock_quantity' => 'nullable|integer|min:0',
                 'stock_status' => 'required|in:in_stock,out_of_stock,on_backorder',
                 'stock_alert_threshold' => 'nullable|integer|min:0',
-                // Retirez temporairement les validations pour les colonnes manquantes
-                // 'weight' => 'nullable|numeric|min:0',
-                // 'dimensions' => 'nullable|array',
-                // 'dimensions.length' => 'nullable|numeric|min:0',
-                // 'dimensions.width' => 'nullable|numeric|min:0',
-                // 'dimensions.height' => 'nullable|numeric|min:0',
                 'featured' => 'nullable|boolean',
                 'is_active' => 'nullable|boolean',
-                // 'meta_title' => 'nullable|string|max:255',
-                // 'meta_description' => 'nullable|string|max:500',
-                // 'meta_keywords' => 'nullable|string|max:255',
-                'images' => 'nullable|array',
-                'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'attributes' => 'nullable|array',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
@@ -280,27 +271,22 @@ class ProductController extends Controller
                 'sku' => $request->sku,
                 'quantity' => $request->stock_quantity, // Notez que le modèle utilise 'quantity' et non 'stock_quantity'
                 'is_active' => $request->has('is_active') ? 1 : 0,
-                // Retirez temporairement les colonnes manquantes
-                // 'weight' => $request->weight,
-                // 'length' => $request->dimensions['length'] ?? null,
-                // 'width' => $request->dimensions['width'] ?? null,
-                // 'height' => $request->dimensions['height'] ?? null,
-                // 'is_featured' => $request->has('featured') ? 1 : 0,
             ]);
             
             \Log::info('Produit mis à jour avec ID: ' . $product->id);
 
-            // Gestion des images
+            // Gestion des images - IMPORTANT: Ne traiter les images que si des fichiers sont effectivement téléchargés
             if ($request->hasFile('images')) {
-                \Log::info('Traitement des nouvelles images');
+                \Log::info('Nouvelles images détectées, traitement en cours...');
                 $hasPrimary = $product->images()->where('is_primary', true)->exists();
                 
                 foreach ($request->file('images') as $image) {
                     $path = $image->store('products', 'public');
+                    \Log::info('Image téléchargée: ' . $path);
                     
                     ProductImage::create([
                         'product_id' => $product->id,
-                        'image_path' => $path, // Utilisez 'image_path' au lieu de 'path'
+                        'image_path' => $path,
                         'is_primary' => !$hasPrimary,
                     ]);
                     
@@ -310,6 +296,8 @@ class ProductController extends Controller
                         $hasPrimary = true;
                     }
                 }
+            } else {
+                \Log::info('Aucune nouvelle image téléchargée, conservation des images existantes');
             }
 
             // Gestion des attributs
@@ -339,6 +327,7 @@ class ProductController extends Controller
 
             DB::commit();
             \Log::info('Transaction validée avec succès');
+            \Log::info('Images après mise à jour:', ['count' => $product->images()->count()]);
 
             // Vérification du stock et notification
             if ($product->quantity <= ($request->stock_alert_threshold ?? 5)) {
@@ -478,13 +467,13 @@ class ProductController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Image supprimée avec succès.',
+                'message' => 'deleted successfully',
                 'redirect_url' => route('admin.products')
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Une erreur est survenue lors de la suppression de l\'image: ' . $e->getMessage()
+                'message' => 'erreur' . $e->getMessage()
             ], 500);
         }
     }
@@ -513,14 +502,14 @@ class ProductController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Stock mis à jour avec succès.',
+                'message' => 'edit success',
                 'quantity' => $product->quantity,
                 'stock_status' => $product->stock_status
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Une erreur est survenue lors de la mise à jour du stock: ' . $e->getMessage()
+                'message' => 'error: ' . $e->getMessage()
             ], 500);
         }
     }

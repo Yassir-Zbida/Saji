@@ -182,17 +182,18 @@
                                 class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('orders.*') ? 'active' : '' }}">
                                 <i class="ri-file-list-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Orders</span>
-                                <span class="ml-auto bg-gray-100 text-gray-700 nav-badge nav-text">30</span>
-                                <span class="tooltip-text" x-show="sidebarCollapsed">Orders (30)</span>
+                                <span class="tooltip-text" x-show="sidebarCollapsed">Orders</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.products') }}"
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
-                                <i class="ri-shopping-bag-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
-                                <span class="nav-text">Products</span>
-                                <span class="tooltip-text" x-show="sidebarCollapsed">Products</span>
-                            </a>
+                            <li>
+                                <a href="{{ route('admin.products') }}"
+                                    class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.products*') ? 'active' : '' }}">
+                                    <i class="ri-file-list-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
+                                    <span class="nav-text">Products</span>
+                                    <span class="tooltip-text" x-show="sidebarCollapsed">Products</span>
+                                </a>
+                            </li>                            
                         </li>
                         <li x-data="{ open: false }">
                             <div class="tooltip px-4 py-2.5 flex items-center justify-between cursor-pointer text-gray-700 hover:bg-gray-100 rounded-lg nav-item transition-colors"

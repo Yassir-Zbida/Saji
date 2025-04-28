@@ -10,19 +10,8 @@
                 <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
                 <p class="mt-1 text-sm text-gray-500">Overview of your store's performance and activity</p>
             </div>
-            <div class="mt-4 md:mt-0 flex space-x-3">
-                <button type="button" id="refresh-dashboard" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    <i class="ri-refresh-line mr-2"></i>
-                    Refresh Data
-                </button>
-                <button type="button" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    <i class="ri-download-line mr-2"></i>
-                    Export
-                </button>
-                <a href="{{ route('admin.products.create') }}" class="inline-flex items-center px-4 py-2 bg-primary border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    <i class="ri-add-line mr-2"></i>
-                    Add product
-                </a>
+            <div class="mt-4 hidden md:mt-0 flex space-x-3">
+                
             </div>
         </div>
 

@@ -399,6 +399,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // Dashboard AJAX endpoints
     Route::get('/dashboard/top-products', [DashboardController::class, 'getTopProducts']);
     Route::get('/dashboard/summary', [DashboardController::class, 'getDashboardSummary']);
+    Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('admin.dashboard.sales-data');
     
     // Analytics
     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
