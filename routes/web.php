@@ -70,14 +70,14 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/account', [ProfileController::class, 'index'])->name('account.index');
     Route::get('/account/edit', [ProfileController::class, 'edit'])->name('account.edit');
     Route::put('/account', [ProfileController::class, 'update'])->name('account.update');
-    
+
     Route::get('/account/addresses', [ProfileController::class, 'addresses'])->name('account.addresses');
     Route::get('/account/addresses/create', [ProfileController::class, 'createAddress'])->name('account.addresses.create');
     Route::post('/account/addresses', [ProfileController::class, 'storeAddress'])->name('account.addresses.store');
     Route::get('/account/addresses/{address}/edit', [ProfileController::class, 'editAddress'])->name('account.addresses.edit');
     Route::put('/account/addresses/{address}', [ProfileController::class, 'updateAddress'])->name('account.addresses.update');
     Route::delete('/account/addresses/{address}', [ProfileController::class, 'destroyAddress'])->name('account.addresses.destroy');
-    
+
     Route::get('/account/orders', [ProfileController::class, 'orders'])->name('account.orders');
     Route::get('/account/orders/{order}', [ProfileController::class, 'showOrder'])->name('account.orders.show');
 
@@ -88,27 +88,27 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/account/tickets/{ticket}/reply', [SupportTicketController::class, 'customerReply'])->name('account.tickets.reply');
     Route::post('/account/tickets/{ticket}/close', [SupportTicketController::class, 'customerClose'])->name('account.tickets.close');
     Route::post('/account/tickets/{ticket}/reopen', [SupportTicketController::class, 'customerReopen'])->name('account.tickets.reopen');
-    
+
     // Route::get('/product/{id}', [ShopController::class, 'product'])->name('products.show');
 
-     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-     Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
-     Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+    Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 
-     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
-     Route::post('/wishlist/add', [WishlistController::class, 'add'])->name('wishlist.add');
-     Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
-     Route::post('/wishlist/clear', [WishlistController::class, 'clear'])->name('wishlist.clear');
-     
-     Route::post('/wishlist/{id}/move-to-cart', [WishlistController::class, 'moveToCart'])->name('wishlist.moveToCart');
-     Route::post('/wishlist/{id}/update-notes', [WishlistController::class, 'updateNotes'])->name('wishlist.updateNotes');
-     
-     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
-     Route::post('/wishlist/check-products', [WishlistController::class, 'checkProducts'])->name('wishlist.checkProducts');
-     Route::get('/wishlist/count', [WishlistController::class, 'getCount'])->name('wishlist.count');
-    
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/add', [WishlistController::class, 'add'])->name('wishlist.add');
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+    Route::post('/wishlist/clear', [WishlistController::class, 'clear'])->name('wishlist.clear');
+
+    Route::post('/wishlist/{id}/move-to-cart', [WishlistController::class, 'moveToCart'])->name('wishlist.moveToCart');
+    Route::post('/wishlist/{id}/update-notes', [WishlistController::class, 'updateNotes'])->name('wishlist.updateNotes');
+
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::post('/wishlist/check-products', [WishlistController::class, 'checkProducts'])->name('wishlist.checkProducts');
+    Route::get('/wishlist/count', [WishlistController::class, 'getCount'])->name('wishlist.count');
+
 });
 
 // AJAX Cart Routes
@@ -144,19 +144,19 @@ Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop
 //     // Display checkout page
 //     Route::get('/', [CheckoutController::class, 'index'])
 //         ->name('checkout.index');
-    
+
 //     // Process checkout
 //     Route::post('/process', [CheckoutController::class, 'process'])
 //         ->name('checkout.process');
-    
+
 //     // Apply coupon
 //     Route::post('/apply-coupon', [CheckoutController::class, 'applyCoupon'])
 //         ->name('checkout.applyCoupon');
-    
+
 //     // Remove coupon
 //     Route::post('/remove-coupon', [CheckoutController::class, 'removeCoupon'])
 //         ->name('checkout.removeCoupon');
-    
+
 //     // Order complete page
 //     Route::get('/complete/{order}', [CheckoutController::class, 'complete'])
 //         ->name('checkout.complete');
@@ -166,13 +166,13 @@ Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop
 //     ->name('cart.checkout');
 
 // Route::prefix('checkout')->group(function () {
-    
+
 //     Route::get('/payment/{order}', [CheckoutController::class, 'payment'])
 //         ->name('checkout.payment');
-    
+
 //     Route::post('/create-payment-intent', [CheckoutController::class, 'createPaymentIntent'])
 //         ->name('checkout.createPaymentIntent');
-    
+
 //     Route::post('/webhook', [StripeController::class, 'handleWebhook'])
 //         ->name('checkout.webhook');
 // });    
@@ -182,15 +182,15 @@ Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop
 // Ajouter ces routes dans la section des routes de checkout existantes
 // Route::prefix('checkout')->group(function () {
 //     // Routes existantes...
-    
+
 //     // Afficher la page de paiement Stripe
 //     Route::get('/payment/{order}', [CheckoutController::class, 'payment'])
 //         ->name('checkout.payment');
-    
+
 //     // Créer une intention de paiement Stripe
 //     Route::post('/create-payment-intent', [CheckoutController::class, 'createPaymentIntent'])
 //         ->name('checkout.createPaymentIntent');
-    
+
 //     // Webhook Stripe
 //     Route::post('/webhook', [StripeController::class, 'handleWebhook'])
 //         ->name('checkout.webhook');
@@ -222,38 +222,38 @@ Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop
 // Route::middleware(['auth', 'role:admin,manager'])->group(function () {
 //     // Dashboard
 //     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
 //     // Products Management
 //     Route::resource('products', ProductController::class);
 //     Route::post('/products/upload-image', [ProductController::class, 'uploadImage'])->name('products.upload-image');
 //     Route::delete('/products/remove-image/{id}', [ProductController::class, 'removeImage'])->name('products.remove-image');
 //     Route::post('/products/update-stock', [ProductController::class, 'updateStock'])->name('products.update-stock');
-    
+
 //     // Categories Management
 //     // Route::resource('categories', CategoryController::class);
-    
+
 //     // Orders Management
 //     Route::resource('orders', OrderController::class);
 //     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 //     Route::post('/orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.update-payment-status');
-    
+
 //     // Invoices Management
 //     Route::resource('invoices', InvoiceController::class);
 //     Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
 //     Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
-    
+
 //     // Support Tickets
 //     Route::resource('support-tickets', SupportTicketController::class);
 //     Route::post('/support-tickets/{supportTicket}/add-response', [SupportTicketController::class, 'addResponse'])->name('support-tickets.add-response');
 //     Route::post('/support-tickets/{supportTicket}/close', [SupportTicketController::class, 'close'])->name('support-tickets.close');
-    
+
 //     // Users Management
 //     Route::resource('users', UserController::class);
-    
+
 //     // Settings
 //     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
 //     Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
-    
+
 //     // Reports
 //     Route::get('/reports/sales', [DashboardController::class, 'salesReport'])->name('reports.sales');
 //     Route::get('/reports/products', [DashboardController::class, 'productsReport'])->name('reports.products');
@@ -265,15 +265,15 @@ Route::get('/shop/quick-view', [ShopController::class, 'quickView'])->name('shop
 // Route::middleware(['auth', 'role:admin'])->group(function () {
 //     // Coupons Management
 //     Route::resource('coupons', App\Http\Controllers\CouponController::class);
-    
+
 //     // Tax Settings
 //     Route::get('/tax-settings', [SettingController::class, 'taxSettings'])->name('tax-settings.index');
 //     Route::post('/tax-settings', [SettingController::class, 'updateTaxSettings'])->name('tax-settings.update');
-    
+
 //     // Shipping Settings
 //     Route::get('/shipping-settings', [SettingController::class, 'shippingSettings'])->name('shipping-settings.index');
 //     Route::post('/shipping-settings', [SettingController::class, 'updateShippingSettings'])->name('shipping-settings.update');
-    
+
 //     // System Maintenance
 //     Route::get('/maintenance', [SettingController::class, 'maintenance'])->name('maintenance.index');
 //     Route::post('/maintenance/toggle', [SettingController::class, 'toggleMaintenance'])->name('maintenance.toggle');
@@ -288,19 +288,19 @@ Route::prefix('checkout')->group(function () {
     // Display checkout page
     Route::get('/', [CheckoutController::class, 'index'])
         ->name('checkout.index');
-    
+
     // Process checkout
     Route::post('/process', [CheckoutController::class, 'process'])
         ->name('checkout.process');
-    
+
     // Apply coupon
     Route::post('/apply-coupon', [CheckoutController::class, 'applyCoupon'])
         ->name('checkout.applyCoupon');
-    
+
     // Remove coupon
     Route::post('/remove-coupon', [CheckoutController::class, 'removeCoupon'])
         ->name('checkout.removeCoupon');
-    
+
     // Order complete page
     Route::get('/complete/{order}', [CheckoutController::class, 'complete'])
         ->name('checkout.complete');
@@ -319,7 +319,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cart/update/{item}', [CartController::class, 'update'])->name('cart.update');
     Route::post('/cart/remove/{item}', [CartController::class, 'remove'])->name('cart.remove');
     Route::get('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-    
+
     // Checkout process
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
@@ -327,7 +327,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
     Route::get('/checkout/complete/{order}', [CheckoutController::class, 'complete'])->name('checkout.complete');
-    
+
     // Stripe routes
     Route::get('/stripe/checkout/{order}', [StripeController::class, 'checkout'])->name('stripe.checkout');
     Route::get('/stripe/success/{order}', [StripeController::class, 'success'])->name('stripe.success');
@@ -394,15 +394,15 @@ Route::get('/403', function () {
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
-    
+
     // Dashboard AJAX endpoints
     Route::get('/dashboard/top-products', [DashboardController::class, 'getTopProducts']);
     Route::get('/dashboard/summary', [DashboardController::class, 'getDashboardSummary']);
     Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('admin.dashboard.sales-data');
-    
+
     // Analytics
     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
-    
+
     // Products
     Route::get('/products', [DashboardController::class, 'adminAllProducts'])->name('admin.products');
     Route::get('/products/create', [ProductController::class, 'create'])->name('admin.products.create');
@@ -417,15 +417,26 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
     Route::get('/products/export', [App\Http\Controllers\DashboardController::class, 'exportProducts'])->name('admin.products.export');
 
- 
-    // Categories
+
+    // Categories management
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');
+    Route::get('/categories/data', [CategoryController::class, 'getCategoriesData'])->name('admin.categories.data');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('admin.categories.create');
     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
-    Route::get('orders/export', [OrdersController::class, 'export'])->name('admin.orders.export');
+    Route::patch('/categories/{category}/position', [CategoryController::class, 'updatePosition'])->name('admin.categories.update-position');
+    Route::get('/categories/export', [CategoryController::class, 'export'])->name('admin.categories.export');
+
+    // Tags management
+    Route::get('/tags', [TagController::class, 'index'])->name('admin.tags');
+    Route::get('/tags/data', [TagController::class, 'getTagsData'])->name('admin.tags.data');
+    Route::post('/tags', [TagController::class, 'store'])->name('admin.tags.store');
+    Route::put('/tags/{tag}', [TagController::class, 'update'])->name('admin.tags.update');
+    Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('admin.tags.destroy');
+    Route::get('/tags/export', [TagController::class, 'export'])->name('admin.tags.export');
+
     // Orders
     Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
     Route::get('/orders/data', [OrdersController::class, 'getOrdersData'])->name('orders.data');
@@ -440,22 +451,22 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('admin.customers.show');
     Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('admin.customers.edit');
     Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('admin.customers.update');
-    
+
     // Support Tickets
     Route::get('/tickets', [TicketController::class, 'index'])->name('admin.tickets');
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('admin.tickets.show');
     Route::post('/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('admin.tickets.reply');
     Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus']);
-    
+
     // Content
     Route::get('/content', [ContentController::class, 'index'])->name('admin.content');
-    
+
     // Marketing
     Route::get('/marketing', [MarketingController::class, 'index'])->name('admin.marketing');
-    
+
     // Discounts
     Route::get('/discounts', [DiscountController::class, 'index'])->name('admin.discounts');
-    
+
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings');
 });

@@ -8,7 +8,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -189,9 +190,29 @@
                             <li>
                                 <a href="{{ route('admin.products') }}"
                                     class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.products*') ? 'active' : '' }}">
-                                    <i class="ri-file-list-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
+                                    <i class="ri-box-1-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                     <span class="nav-text">Products</span>
                                     <span class="tooltip-text" x-show="sidebarCollapsed">Products</span>
+                                </a>
+                            </li>                            
+                        </li>
+                        <li>
+                            <li>
+                                <a href="{{ route('admin.categories') }}"
+                                    class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.categories*') ? 'active' : '' }}">
+                                    <i class="ri-archive-stack-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
+                                    <span class="nav-text">Categories</span>
+                                    <span class="tooltip-text" x-show="sidebarCollapsed">Categories</span>
+                                </a>
+                            </li>                            
+                        </li>
+                        <li>
+                            <li>
+                                <a href="{{ route('admin.tags') }}"
+                                    class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.tags*') ? 'active' : '' }}">
+                                    <i class="ri-price-tag-3-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
+                                    <span class="nav-text">Tags</span>
+                                    <span class="tooltip-text" x-show="sidebarCollapsed">Tags</span>
                                 </a>
                             </li>                            
                         </li>
@@ -208,9 +229,9 @@
                             </div>
                             <div x-show="open && !sidebarCollapsed" class="pl-10 pr-4 mt-1 space-y-1"
                                 style="display: none;">
-                                <a href="#"
+                                <a href="{{ route('admin.categories') }}"
                                     class="block py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-colors">Categories</a>
-                                <a href="#"
+                                <a href="{{ route('admin.tags') }}"
                                     class="block py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-colors">Product
                                     Tags</a>
                             </div>
