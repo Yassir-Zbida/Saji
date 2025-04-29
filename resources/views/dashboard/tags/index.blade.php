@@ -10,16 +10,16 @@
                 <p class="mt-1 text-sm text-gray-500">Manage product tags and labeling</p>
             </div>
             <div class="mt-4 md:mt-0 flex space-x-3">
-                <a href="" @click.prevent="exportTags()"
+                <a href="{{ route('tags.export') }}" @click.prevent="exportTags()"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                     <i class="ri-download-line mr-2"></i>
                     Export
                 </a>
-                <button @click="showCreateModal = true"
+                <a href="{{ route('tags.create') }}"
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                     <i class="ri-add-line mr-2"></i>
                     Add Tag
-                </button>
+                </a>
                 <button type="button" @click="showFilters = !showFilters"
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                     <i class="ri-filter-3-line mr-2"></i>
@@ -28,8 +28,8 @@
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+        <!-- Stats Cards - Now with 4 boxes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
             <!-- Total Tags -->
             <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
                 <div class="flex items-center justify-between">
@@ -81,6 +81,24 @@
                 <div class="mt-3 flex items-center text-sm">
                     <span class="text-purple-500 font-medium flex items-center">
                         <i class="ri-information-line mr-1"></i> Different tag types
+                    </span>
+                </div>
+            </div>
+
+            <!-- Active Tags -->
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Active Tags</p>
+                        <h3 class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.activeTags">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center">
+                        <i class="ri-check-line text-xl text-green-600"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center text-sm">
+                    <span class="text-green-500 font-medium flex items-center">
+                        <i class="ri-information-line mr-1"></i> <span x-text="stats.activeTagsPercent"></span>% of total
                     </span>
                 </div>
             </div>
@@ -220,9 +238,9 @@
                                         <span x-text="tag.products_count || 0"></span> products
                                     </span>
                                     <div class="flex space-x-1">
-                                        <button @click="editTag(tag)" class="text-gray-500 hover:text-primary">
+                                        <a :href="`{{ url('/admin/tags') }}/${tag.id}/edit`" class="text-gray-500 hover:text-primary">
                                             <i class="ri-pencil-line"></i>
-                                        </button>
+                                        </a>
                                         <button @click="confirmDelete(tag)" class="text-gray-500 hover:text-red-600">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
@@ -251,10 +269,10 @@
                         class="inline-flex items-center px-6 py-3 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                         <i class="ri-refresh-line mr-2"></i> Reset Filters
                     </button>
-                    <button @click="showCreateModal = true"
+                    <a href="{{ route('tags.create') }}"
                         class="inline-flex items-center px-6 py-3 border border-transparent bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
                         <i class="ri-add-line mr-2"></i> Add Tag
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -315,112 +333,6 @@
             </div>
         </div>
 
-        <!-- Create/Edit Tag Modal -->
-        <div x-show="showCreateModal || showEditModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-                </div>
-                <!-- Modal -->
-                <div
-                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div
-                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 sm:mx-0 sm:h-10 sm:w-10">
-                                <i class="ri-price-tag-3-line text-primary"></i>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900"
-                                    x-text="showEditModal ? 'Edit Tag' : 'Add New Tag'"></h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500"
-                                        x-text="showEditModal ? 'Update tag information below.' : 'Create a new tag for your products.'">
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-6 space-y-4">
-                            <form id="tagForm" @submit.prevent="submitTagForm">
-                                <div class="space-y-4">
-                                    <!-- Name -->
-                                    <div>
-                                        <label for="tag_name" class="block text-sm font-medium text-gray-700">Name</label>
-                                        <input type="text" name="name" id="tag_name" x-model="tagForm.name"
-                                            required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20 sm:text-sm">
-                                    </div>
-
-                                    <!-- Slug -->
-                                    <div>
-                                        <label for="tag_slug" class="block text-sm font-medium text-gray-700">Slug</label>
-                                        <div class="mt-1 flex rounded-md shadow-sm">
-                                            <input type="text" name="slug" id="tag_slug" x-model="tagForm.slug"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20 sm:text-sm">
-                                        </div>
-                                        <p class="mt-1 text-xs text-gray-500">Leave empty to auto-generate from name</p>
-                                    </div>
-
-                                    <!-- Description -->
-                                    <div>
-                                        <label for="tag_description"
-                                            class="block text-sm font-medium text-gray-700">Description</label>
-                                        <textarea id="tag_description" name="description" rows="3" x-model="tagForm.description"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20 sm:text-sm"></textarea>
-                                    </div>
-
-                                    <!-- Type -->
-                                    <div>
-                                        <label for="tag_type" class="block text-sm font-medium text-gray-700">Type</label>
-                                        <select id="tag_type" name="type" x-model="tagForm.type"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20 sm:text-sm">
-                                            <option value="product">Product</option>
-                                            <option value="blog">Blog</option>
-                                            <option value="content">Content</option>
-                                            <option value="custom">Custom</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Color -->
-                                    <div>
-                                        <label for="tag_color"
-                                            class="block text-sm font-medium text-gray-700">Color</label>
-                                        <div class="mt-1 grid grid-cols-4 gap-2">
-                                            <template
-                                                x-for="color in ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'gray', 'black']">
-                                                <div @click="tagForm.color = color"
-                                                    class="h-8 rounded cursor-pointer border-2"
-                                                    :class="[
-                                                        'bg-' + color + '-500',
-                                                        tagForm.color === color ? 'border-gray-900' :
-                                                        'border-transparent'
-                                                    ]">
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" @click="submitTagForm()"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm"
-                            :disabled="isSubmitting">
-                            <span x-show="isSubmitting" class="inline-block animate-spin mr-2">
-                                <i class="ri-loader-4-line"></i>
-                            </span>
-                            <span x-text="showEditModal ? 'Update Tag' : 'Create Tag'"></span>
-                        </button>
-                        <button type="button" @click="closeModal()"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Delete Confirmation Modal -->
         <div x-show="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -455,14 +367,18 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" @click="deleteTag()"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                            :disabled="isDeleting">
-                            <span x-show="isDeleting" class="inline-block animate-spin mr-2">
-                                <i class="ri-loader-4-line"></i>
-                            </span>
-                            <span>Delete</span>
-                        </button>
+                        <form :action="'{{ route('tags.destroy', ':id') }}'.replace(':id', tagToDelete?.id)" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                :disabled="isDeleting">
+                                <span x-show="isDeleting" class="inline-block animate-spin mr-2">
+                                    <i class="ri-loader-4-line"></i>
+                                </span>
+                                <span>Delete</span>
+                            </button>
+                        </form>
                         <button type="button" @click="showDeleteModal = false"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Cancel
@@ -483,7 +399,9 @@
                 mostUsedTag: null,
                 mostUsedTagCount: 0,
                 tagTypeCount: 0,
-                tagGrowth: 0
+                tagGrowth: 0,
+                activeTags: 0,
+                activeTagsPercent: 0
             },
             filters: {
                 type: '',
@@ -498,21 +416,10 @@
                 total: 0,
                 last_page: 1
             },
-            tagForm: {
-                id: null,
-                name: '',
-                slug: '',
-                description: '',
-                type: 'product',
-                color: 'blue'
-            },
             tagToDelete: null,
             isLoading: true,
-            isSubmitting: false,
             isDeleting: false,
             showFilters: false,
-            showCreateModal: false,
-            showEditModal: false,
             showDeleteModal: false,
             tagHasProducts: false,
 
@@ -572,7 +479,9 @@
                                 mostUsedTag: data.stats.mostUsedTag,
                                 mostUsedTagCount: data.stats.mostUsedTagCount,
                                 tagTypeCount: data.stats.tagTypeCount,
-                                tagGrowth: data.stats.tagGrowth
+                                tagGrowth: data.stats.tagGrowth,
+                                activeTags: data.stats.activeTags,
+                                activeTagsPercent: data.stats.activeTagsPercent
                             };
                         } else {
                             console.error('Error fetching tags:', data.message);
@@ -700,136 +609,10 @@
                 }
             },
 
-            editTag(tag) {
-                this.tagForm = {
-                    id: tag.id,
-                    name: tag.name,
-                    slug: tag.slug,
-                    description: tag.description || '',
-                    type: tag.type || 'product',
-                    color: tag.color || 'blue'
-                };
-                this.showEditModal = true;
-            },
-
             confirmDelete(tag) {
                 this.tagToDelete = tag;
                 this.tagHasProducts = tag.products_count > 0;
                 this.showDeleteModal = true;
-            },
-
-            deleteTag() {
-                if (!this.tagToDelete) return;
-
-                this.isDeleting = true;
-
-                // Create a form dynamically to submit a DELETE request
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/admin/tags/${this.tagToDelete.id}`;
-
-                // Add CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = csrfToken;
-                form.appendChild(csrfInput);
-
-                // Add method spoofing for DELETE
-                const methodInput = document.createElement('input');
-                methodInput.type = 'hidden';
-                methodInput.name = '_method';
-                methodInput.value = 'DELETE';
-                form.appendChild(methodInput);
-
-                // Append form to document body and submit
-                document.body.appendChild(form);
-                form.submit();
-            },
-
-            submitTagForm() {
-                if (this.isSubmitting) return;
-
-                this.isSubmitting = true;
-
-                const formData = new FormData();
-
-                // Add all form fields
-                for (const [key, value] of Object.entries(this.tagForm)) {
-                    if (value !== null) {
-                        formData.append(key, value);
-                    }
-                }
-
-                const method = this.showEditModal ? 'PUT' : 'POST';
-                const url = this.showEditModal ?
-                    `/admin/tags/${this.tagForm.id}` :
-                    '/admin/tags';
-
-                fetch(url, {
-                        method: method,
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content'),
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: formData
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(data => {
-                                throw new Error(data.message || 'Something went wrong');
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            // Show success message
-                            this.$dispatch('toast', {
-                                title: 'Success!',
-                                message: data.message || (this.showEditModal ? 'Tag updated successfully' :
-                                    'Tag created successfully'),
-                                type: 'success'
-                            });
-
-                            // Close modal and refresh data
-                            this.closeModal();
-                            this.fetchTags();
-                        } else {
-                            throw new Error(data.message || 'Something went wrong');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        // Show error message
-                        this.$dispatch('toast', {
-                            title: 'Error!',
-                            message: error.message || 'An error occurred while saving the tag',
-                            type: 'error'
-                        });
-                    })
-                    .finally(() => {
-                        this.isSubmitting = false;
-                    });
-            },
-
-            closeModal() {
-                this.showCreateModal = false;
-                this.showEditModal = false;
-                this.resetTagForm();
-            },
-
-            resetTagForm() {
-                this.tagForm = {
-                    id: null,
-                    name: '',
-                    slug: '',
-                    description: '',
-                    type: 'product',
-                    color: 'blue'
-                };
             },
 
             exportTags() {
@@ -844,6 +627,6 @@
 
                 window.location.href = "/admin/tags/export?" + queryParams.toString();
             }
-        }
+        };
     }
 </script>

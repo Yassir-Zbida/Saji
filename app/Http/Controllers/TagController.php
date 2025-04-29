@@ -1,13 +1,12 @@
 <?php
 
+namespace App\Http\Controllers\Admin;
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Tag;
-use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class TagController extends Controller
 {
@@ -18,61 +17,59 @@ class TagController extends Controller
      */
     public function index()
     {
-        // Check if request is AJAX
-        if (request()->ajax()) {
-            return $this->getTagsData();
-        }
-
         return view('dashboard.tags.index');
     }
 
     /**
-     * Get tags data for AJAX requests.
+     * Return tags data for the index page.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
-    public function getTagsData()
+    public function data(Request $request)
     {
-        $query = Tag::withCount('products');
+        $query = Tag::query();
 
         // Apply filters
-        if (request()->has('type') && request()->type !== '') {
-            $query->where('type', request()->type);
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
         }
 
-        if (request()->has('color') && request()->color !== '') {
-            $query->where('color', request()->color);
+        if ($request->filled('color')) {
+            $query->where('color', $request->color);
         }
 
-        if (request()->has('search') && request()->search !== '') {
-            $search = request()->search;
+        if ($request->filled('search')) {
+            $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        // Apply sorting
-        $sort = request()->input('sort', 'name');
-        $direction = request()->input('direction', 'asc');
-        
-        if ($sort === 'products_count') {
-            $query->orderBy('products_count', $direction);
-        } else {
-            $query->orderBy($sort, $direction);
-        }
+        // Sort
+        $sortField = $request->get('sort', 'name');
+        $sortDirection = $request->get('direction', 'asc');
+        $query->orderBy($sortField, $sortDirection);
 
-        // Calculate statistics
+        // Paginate
+        $tags = $query->withCount('products')->paginate(12);
+
+        // Count total and active tags
+        $totalTags = Tag::count();
+        $activeTags = Tag::where('is_active', true)->count();
+        $activeTagsPercent = $totalTags > 0 ? round(($activeTags / $totalTags) * 100) : 0;
+
+        // Get statistics for cards
         $stats = [
-            'totalTags' => Tag::count(),
-            'mostUsedTag' => null,
-            'mostUsedTagCount' => 0,
+            'totalTags' => $totalTags,
+            'tagGrowth' => $this->calculateTagGrowth(),
             'tagTypeCount' => Tag::distinct('type')->count('type'),
-            'tagGrowth' => 0
+            'activeTags' => $activeTags,
+            'activeTagsPercent' => $activeTagsPercent
         ];
 
-        // Get most used tag
+        // Find most used tag
         $mostUsedTag = Tag::withCount('products')
             ->orderBy('products_count', 'desc')
             ->first();
@@ -80,24 +77,26 @@ class TagController extends Controller
         if ($mostUsedTag) {
             $stats['mostUsedTag'] = $mostUsedTag->name;
             $stats['mostUsedTagCount'] = $mostUsedTag->products_count;
+        } else {
+            $stats['mostUsedTag'] = null;
+            $stats['mostUsedTagCount'] = 0;
         }
-
-        // Calculate growth (comparing to last month)
-        $lastMonthCount = Tag::where('created_at', '<', now()->subMonth())->count();
-        $currentCount = $stats['totalTags'];
-        
-        if ($lastMonthCount > 0) {
-            $stats['tagGrowth'] = round((($currentCount - $lastMonthCount) / $lastMonthCount) * 100);
-        }
-
-        // Paginate results
-        $perPage = request()->input('per_page', 12);
-        $tags = $query->paginate($perPage);
 
         return response()->json([
             'tags' => $tags,
-            'stats' => $stats
+            'stats' => $stats,
+            'error' => false
         ]);
+    }
+
+    /**
+     * Show the form for creating a new tag.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        return view('dashboard.tags.create');
     }
 
     /**
@@ -108,38 +107,40 @@ class TagController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:tags',
             'description' => 'nullable|string',
-            'color' => 'nullable|string|max:30',
-            'type' => 'required|string|max:30',
+            'type' => 'required|string|max:255',
+            'color' => 'nullable|string|max:255',
+            'position' => 'nullable|integer|min:0',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        if ($validator->fails()) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+        // Generate slug if not provided
+        $slug = $request->slug;
+        if (empty($slug)) {
+            $slug = Str::slug($request->name);
             
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            // Ensure slug is unique
+            $count = 1;
+            $originalSlug = $slug;
+            while (Tag::where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $count++;
+            }
         }
 
-        $data = $validator->validated();
+        $tag = Tag::create([
+            'name' => $request->name,
+            'slug' => $slug,
+            'description' => $request->description,
+            'type' => $request->type,
+            'color' => $request->color,
+            'position' => $request->position ?? 0,
+            'is_active' => $request->filled('is_active'),
+        ]);
 
-        // Handle slug
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['name']);
-        }
-
-        $tag = Tag::create($data);
-
-        if ($request->ajax()) {
+        if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Tag created successfully',
@@ -148,7 +149,18 @@ class TagController extends Controller
         }
 
         return redirect()->route('admin.tags')
-            ->with('success', 'Tag created successfully');
+            ->with('success', 'Tag created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified tag.
+     *
+     * @param  \App\Models\Tag  $tag
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Tag $tag)
+    {
+        return view('dashboard.tags.edit', compact('tag'));
     }
 
     /**
@@ -160,43 +172,40 @@ class TagController extends Controller
      */
     public function update(Request $request, Tag $tag)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('tags')->ignore($tag->id),
-            ],
+            'slug' => 'nullable|string|max:255|unique:tags,slug,' . $tag->id,
             'description' => 'nullable|string',
-            'color' => 'nullable|string|max:30',
-            'type' => 'required|string|max:30',
+            'type' => 'required|string|max:255',
+            'color' => 'nullable|string|max:255',
+            'position' => 'nullable|integer|min:0',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        if ($validator->fails()) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+        // Generate slug if not provided
+        $slug = $request->slug;
+        if (empty($slug)) {
+            $slug = Str::slug($request->name);
             
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            // Ensure slug is unique
+            $count = 1;
+            $originalSlug = $slug;
+            while (Tag::where('slug', $slug)->where('id', '!=', $tag->id)->exists()) {
+                $slug = $originalSlug . '-' . $count++;
+            }
         }
 
-        $data = $validator->validated();
+        $tag->update([
+            'name' => $request->name,
+            'slug' => $slug,
+            'description' => $request->description,
+            'type' => $request->type,
+            'color' => $request->color,
+            'position' => $request->position ?? $tag->position,
+            'is_active' => $request->filled('is_active'),
+        ]);
 
-        // Handle slug
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['name']);
-        }
-
-        $tag->update($data);
-
-        if ($request->ajax()) {
+        if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Tag updated successfully',
@@ -205,7 +214,7 @@ class TagController extends Controller
         }
 
         return redirect()->route('admin.tags')
-            ->with('success', 'Tag updated successfully');
+            ->with('success', 'Tag updated successfully.');
     }
 
     /**
@@ -216,45 +225,58 @@ class TagController extends Controller
      */
     public function destroy(Tag $tag)
     {
-        // Detach all products from this tag
-        $tag->products()->detach();
-
         $tag->delete();
 
-        if (request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Tag deleted successfully'
-            ]);
-        }
-
         return redirect()->route('admin.tags')
-            ->with('success', 'Tag deleted successfully');
+            ->with('success', 'Tag deleted successfully.');
     }
 
     /**
-     * Export tags to CSV.
+     * Export tags data.
      *
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
-    public function export()
+    public function export(Request $request)
     {
+        $query = Tag::query();
+
+        // Apply filters
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('color')) {
+            $query->where('color', $request->color);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Sort
+        $sortField = $request->get('sort', 'name');
+        $sortDirection = $request->get('direction', 'asc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $tags = $query->withCount('products')->get();
+
+        // Generate CSV
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="tags-'.date('Y-m-d').'.csv"',
+            'Content-Disposition' => 'attachment; filename=tags-export-' . date('Y-m-d') . '.csv',
         ];
 
-        $tags = Tag::withCount('products')->get();
+        $columns = ['ID', 'Name', 'Slug', 'Description', 'Type', 'Color', 'Position', 'Products Count', 'Active', 'Created At'];
 
-        $callback = function() use ($tags) {
+        $callback = function () use ($tags, $columns) {
             $file = fopen('php://output', 'w');
-            
-            // Add headers
-            fputcsv($file, [
-                'ID', 'Name', 'Slug', 'Description', 'Type', 'Color', 
-                'Products Count', 'Created At', 'Updated At'
-            ]);
-            
+            fputcsv($file, $columns);
+
             foreach ($tags as $tag) {
                 fputcsv($file, [
                     $tag->id,
@@ -263,15 +285,41 @@ class TagController extends Controller
                     $tag->description,
                     $tag->type,
                     $tag->color,
+                    $tag->position,
                     $tag->products_count,
+                    $tag->is_active ? 'Yes' : 'No',
                     $tag->created_at->format('Y-m-d H:i:s'),
-                    $tag->updated_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Calculate the growth percentage of tags from last month.
+     *
+     * @return int
+     */
+    private function calculateTagGrowth()
+    {
+        $now = now();
+        $currentMonthCount = Tag::whereYear('created_at', $now->year)
+            ->whereMonth('created_at', $now->month)
+            ->count();
+
+        $lastMonth = $now->subMonth();
+        $lastMonthCount = Tag::whereYear('created_at', $lastMonth->year)
+            ->whereMonth('created_at', $lastMonth->month)
+            ->count();
+
+        if ($lastMonthCount === 0) {
+            return $currentMonthCount > 0 ? 100 : 0;
+        }
+
+        $growth = (($currentMonthCount - $lastMonthCount) / $lastMonthCount) * 100;
+        return round($growth);
     }
 }

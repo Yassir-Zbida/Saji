@@ -430,13 +430,15 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('/categories/{category}/position', [CategoryController::class, 'updatePosition'])->name('admin.categories.update-position');
     Route::get('/categories/export', [CategoryController::class, 'export'])->name('admin.categories.export');
 
-    // Tags management
+
     Route::get('/tags', [TagController::class, 'index'])->name('admin.tags');
-    Route::get('/tags/data', [TagController::class, 'getTagsData'])->name('admin.tags.data');
-    Route::post('/tags', [TagController::class, 'store'])->name('admin.tags.store');
-    Route::put('/tags/{tag}', [TagController::class, 'update'])->name('admin.tags.update');
-    Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('admin.tags.destroy');
-    Route::get('/tags/export', [TagController::class, 'export'])->name('admin.tags.export');
+    Route::get('/tags/create', [TagController::class, 'create'])->name('tags.create');
+    Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
+    Route::get('/tags/{tag}/edit', [TagController::class, 'edit'])->name('tags.edit');
+    Route::put('/tags/{tag}', [TagController::class, 'update'])->name('tags.update');
+    Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
+    Route::get('/tags/data', [TagController::class, 'data'])->name('tags.data');
+    Route::get('/tags/export', [TagController::class, 'export'])->name('tags.export');
 
     // Orders
     Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
@@ -471,13 +473,3 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings');
 });
-
-
-// // Dashboard routes
-// Route::prefix('admin/dashboard')->name('admin.dashboard.')->middleware(['auth', 'admin'])->group(function () {
-//     Route::get('/', [DashboardController::class, 'index'])->name('index');
-//     Route::get('/top-products', [DashboardController::class, 'getTopProductsApi'])->name('top-products');
-//     Route::get('/summary', [DashboardController::class, 'getDashboardSummary'])->name('summary');
-//     Route::get('/sales-data', [DashboardController::class, 'getSalesData'])->name('sales-data');
-//     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('analytics');
-// });
