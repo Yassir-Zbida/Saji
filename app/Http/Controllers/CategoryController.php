@@ -343,16 +343,53 @@ class CategoryController extends Controller
      *
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function export()
+    public function export(Request $request)
     {
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="categories-' . date('Y-m-d') . '.csv"',
         ];
 
-        $categories = Category::with('parent')
-            ->withCount('products')
-            ->get();
+        // Start with the base query
+        $query = Category::with('parent')
+            ->withCount('products');
+
+        // Apply the same filters as in getCategoriesData
+        if ($request->has('parent')) {
+            if ($request->parent === 'root') {
+                $query->whereNull('parent_id');
+            } else {
+                $query->where('parent_id', $request->parent);
+            }
+        }
+
+        if ($request->has('status')) {
+            $status = $request->status === 'active';
+            $query->where('is_active', $status);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        $sort = $request->input('sort', 'position');
+        $direction = $request->input('direction', 'asc');
+
+        if ($sort === 'products_count') {
+            $query->withCount('products')
+                ->orderBy('products_count', $direction);
+        } else {
+            $query->orderBy($sort, $direction);
+        }
+
+        // Get the filtered categories
+        $categories = $query->get();
 
         $callback = function () use ($categories) {
             $file = fopen('php://output', 'w');
@@ -367,9 +404,6 @@ class CategoryController extends Controller
                 'Products Count',
                 'Position',
                 'Status',
-                'Meta Title',
-                'Meta Description',
-                'Meta Keywords',
                 'Created At',
                 'Updated At'
             ]);
@@ -384,9 +418,6 @@ class CategoryController extends Controller
                     $category->products_count,
                     $category->position,
                     $category->is_active ? 'Active' : 'Inactive',
-                    $category->meta_title,
-                    $category->meta_description,
-                    $category->meta_keywords,
                     $category->created_at->format('Y-m-d H:i:s'),
                     $category->updated_at->format('Y-m-d H:i:s'),
                 ]);
