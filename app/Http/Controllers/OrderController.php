@@ -280,17 +280,97 @@ class OrderController extends Controller
      */
     public function export(Request $request)
     {
-        $query = Order::with('user');
+        // Ajout de logs pour déboguer
+        Log::info('Export orders method called', ['request' => $request->all()]);
         
-        // Apply the same filters as in index method
-        // (code omitted for brevity - copy from index method)
-        
-        $orders = $query->get();
-        
-        // Generate CSV (implementation depends on your CSV library)
-        // This is just a placeholder - implement your actual CSV export
-        
-        return back()->with('success', 'Orders exported successfully.');
+        try {
+            $query = Order::with('user');
+
+            if ($request->has('status') && $request->status != '') {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->has('payment_status') && $request->payment_status != '') {
+                $query->where('payment_status', $request->payment_status);
+            }
+
+            if ($request->has('user_id') && $request->user_id != '') {
+                $query->where('user_id', $request->user_id);
+            }
+
+            if ($request->has('date_from') && $request->date_from != '') {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+
+            if ($request->has('date_to') && $request->date_to != '') {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            if ($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('order_number', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            $orders = $query->get();
+            
+            Log::info('Orders fetched for export', ['count' => $orders->count()]);
+
+            $filename = 'orders_export_' . date('Y-m-d_His') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0'
+            ];
+
+            $callback = function () use ($orders) {
+                $handle = fopen('php://output', 'w');
+
+                fputcsv($handle, [
+                    'Order #',
+                    'Date',
+                    'Customer',
+                    'Email',
+                    'Status',
+                    'Payment Status',
+                    'Items',
+                    'Total Amount',
+                ]);
+
+                foreach ($orders as $order) {
+                    fputcsv($handle, [
+                        $order->order_number ?? 'N/A',
+                        $order->created_at ? $order->created_at->format('Y-m-d H:i:s') : 'N/A',
+                        $order->user ? $order->user->name : 'Guest',
+                        $order->user ? $order->user->email : 'N/A',
+                        ucfirst($order->status ?? 'N/A'),
+                        ucfirst($order->payment_status ?? 'N/A'),
+                        $order->items ? $order->items->sum('quantity') : 0,
+                        $order->total_amount ?? 0,
+                    ]);
+                }
+
+                fclose($handle);
+            };
+
+            return response()->stream($callback, 200, $headers);
+            
+        } catch (\Exception $e) {
+            Log::error('Error in export orders', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->withErrors(['error' => 'Une erreur est survenue lors de l\'export: ' . $e->getMessage()]);
+        }
     }
 
 

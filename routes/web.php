@@ -417,6 +417,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
     Route::get('/products/export', [App\Http\Controllers\DashboardController::class, 'exportProducts'])->name('admin.products.export');
 
+ 
     // Categories
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('admin.categories.create');
@@ -424,7 +425,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
-    
+    Route::get('orders/export', [OrdersController::class, 'export'])->name('admin.orders.export');
     // Orders
     Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
     Route::get('/orders/data', [OrdersController::class, 'getOrdersData'])->name('orders.data');
@@ -433,7 +434,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('/orders/{id}/status', [OrdersController::class, 'updateStatus'])->name('orders.update-status');
     Route::patch('/orders/{id}/payment', [OrdersController::class, 'updatePaymentStatus'])->name('orders.update-payment');
     Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
-    Route::get('/orders/export', [App\Http\Controllers\OrdersController::class, 'export'])->name('admin.orders.export');
+    // Route::get('/orders/export', [OrdersController::class, 'export'])->name('admin.orders.export');
     // Customers
     Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('admin.customers.show');

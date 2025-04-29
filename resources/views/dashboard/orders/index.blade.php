@@ -681,7 +681,32 @@
 
 
     function exportOrders() {
-        let queryParams = new URLSearchParams(window.location.search);
-        window.location.href = "{{ route('admin.orders.export') }}?" + queryParams.toString();
+    console.log('Exporting orders...');
+    
+    let queryParams = new URLSearchParams();
+
+    // Add all your current filters to the query params
+    if (document.getElementById('status') && document.getElementById('status').value) {
+        queryParams.append('status', document.getElementById('status').value);
     }
+
+    if (document.getElementById('payment') && document.getElementById('payment').value) {
+        queryParams.append('payment_status', document.getElementById('payment').value);
+    }
+
+    if (document.getElementById('from_date') && document.getElementById('from_date').value) {
+        queryParams.append('date_from', document.getElementById('from_date').value);
+    }
+
+    if (document.getElementById('to_date') && document.getElementById('to_date').value) {
+        queryParams.append('date_to', document.getElementById('to_date').value);
+    }
+
+    if (document.getElementById('search') && document.getElementById('search').value) {
+        queryParams.append('search', document.getElementById('search').value);
+    }
+
+    // Utilisez l'URL complète avec le préfixe admin
+    window.location.href = "/admin/orders/export?" + queryParams.toString();
+}
 </script>

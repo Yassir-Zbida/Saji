@@ -776,7 +776,7 @@
                     }
                 }
 
-                window.location.href = `/admin/products/export?${queryParams.toString()}`;
+                window.location.href = "{{ route('admin.products.export') }}?" + queryParams.toString();
             },
 
             getStockLevelClass(product) {
