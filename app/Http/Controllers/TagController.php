@@ -23,7 +23,7 @@ class TagController extends Controller
             return $this->getTagsData();
         }
 
-        return view('admin.tags.index');
+        return view('dashboard.tags.index');
     }
 
     /**

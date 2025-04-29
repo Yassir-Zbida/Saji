@@ -63,10 +63,10 @@ class CategoryController extends Controller
         // Apply sorting
         $sort = request()->input('sort', 'position');
         $direction = request()->input('direction', 'asc');
-        
+
         if ($sort === 'products_count') {
             $query->withCount('products')
-                  ->orderBy('products_count', $direction);
+                ->orderBy('products_count', $direction);
         } else {
             $query->orderBy($sort, $direction);
         }
@@ -102,7 +102,7 @@ class CategoryController extends Controller
         // Calculate growth (comparing to last month)
         $lastMonthCount = Category::where('created_at', '<', now()->subMonth())->count();
         $currentCount = $stats['totalCategories'];
-        
+
         if ($lastMonthCount > 0) {
             $stats['categoryGrowth'] = round((($currentCount - $lastMonthCount) / $lastMonthCount) * 100);
         }
@@ -132,7 +132,7 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.categories.create', compact('parentCategories'));
+        return view('dashboard.categories.create', compact('parentCategories'));
     }
 
     /**
@@ -157,14 +157,6 @@ class CategoryController extends Controller
         ]);
 
         if ($validator->fails()) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -187,15 +179,12 @@ class CategoryController extends Controller
             $data['position'] = Category::max('position') + 1;
         }
 
-        $category = Category::create($data);
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Category created successfully',
-                'category' => $category
-            ]);
+        // Set is_active to false if not provided
+        if (!isset($data['is_active'])) {
+            $data['is_active'] = false;
         }
+
+        $category = Category::create($data);
 
         return redirect()->route('admin.categories')
             ->with('success', 'Category created successfully');
@@ -212,13 +201,15 @@ class CategoryController extends Controller
         $parentCategories = Category::where('id', '!=', $category->id)
             ->whereNotIn('id', $category->descendants()->pluck('id')->toArray())
             ->whereNull('parent_id')
-            ->orWhere(function ($query) {
-                $query->has('children');
+            ->orWhere(function ($query) use ($category) {
+                $query->has('children')
+                    ->where('id', '!=', $category->id)
+                    ->whereNotIn('id', $category->descendants()->pluck('id')->toArray());
             })
             ->orderBy('name')
             ->get();
 
-        return view('admin.categories.edit', compact('category', 'parentCategories'));
+        return view('dashboard.categories.edit', compact('category', 'parentCategories'));
     }
 
     /**
@@ -228,6 +219,7 @@ class CategoryController extends Controller
      * @param  \App\Models\Category  $category
      * @return \Illuminate\Http\Response
      */
+    // In your CategoryController update method
     public function update(Request $request, Category $category)
     {
         $validator = Validator::make($request->all(), [
@@ -240,23 +232,11 @@ class CategoryController extends Controller
             ],
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'meta_keywords' => 'nullable|string|max:255',
             'position' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -266,13 +246,6 @@ class CategoryController extends Controller
 
         // Make sure a category can't be its own parent
         if (!empty($data['parent_id']) && $data['parent_id'] == $category->id) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'A category cannot be its own parent'
-                ], 422);
-            }
-            
             return redirect()->back()
                 ->with('error', 'A category cannot be its own parent')
                 ->withInput();
@@ -283,25 +256,12 @@ class CategoryController extends Controller
             $data['slug'] = Str::slug($data['name']);
         }
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($category->image) {
-                Storage::disk('public')->delete($category->image);
-            }
-            
-            $data['image'] = $request->file('image')->store('categories', 'public');
+        // Set is_active to false if not provided
+        if (!isset($data['is_active'])) {
+            $data['is_active'] = false;
         }
 
         $category->update($data);
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Category updated successfully',
-                'category' => $category
-            ]);
-        }
 
         return redirect()->route('admin.categories')
             ->with('success', 'Category updated successfully');
@@ -317,13 +277,6 @@ class CategoryController extends Controller
     {
         // Check if category has products
         if ($category->products()->count() > 0) {
-            if (request()->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete category because it has associated products'
-                ], 422);
-            }
-            
             return redirect()->back()
                 ->with('error', 'Cannot delete category because it has associated products');
         }
@@ -343,13 +296,6 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        if (request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Category deleted successfully'
-            ]);
-        }
-
         return redirect()->route('admin.categories')
             ->with('success', 'Category deleted successfully');
     }
@@ -365,7 +311,7 @@ class CategoryController extends Controller
     {
         $direction = $request->input('direction', 'up');
         $currentPosition = $category->position;
-        
+
         if ($direction === 'up') {
             $targetCategory = Category::where('position', '<', $currentPosition)
                 ->where('parent_id', $category->parent_id)
@@ -377,18 +323,18 @@ class CategoryController extends Controller
                 ->orderBy('position', 'asc')
                 ->first();
         }
-        
+
         if ($targetCategory) {
             $targetPosition = $targetCategory->position;
-            
+
             // Swap positions
             $category->position = $targetPosition;
             $targetCategory->position = $currentPosition;
-            
+
             $category->save();
             $targetCategory->save();
         }
-        
+
         return redirect()->back()->with('success', 'Category position updated');
     }
 
@@ -401,23 +347,33 @@ class CategoryController extends Controller
     {
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="categories-'.date('Y-m-d').'.csv"',
+            'Content-Disposition' => 'attachment; filename="categories-' . date('Y-m-d') . '.csv"',
         ];
 
         $categories = Category::with('parent')
             ->withCount('products')
             ->get();
 
-        $callback = function() use ($categories) {
+        $callback = function () use ($categories) {
             $file = fopen('php://output', 'w');
-            
+
             // Add headers
             fputcsv($file, [
-                'ID', 'Name', 'Slug', 'Description', 'Parent', 'Products Count', 
-                'Position', 'Status', 'Meta Title', 'Meta Description', 'Meta Keywords',
-                'Created At', 'Updated At'
+                'ID',
+                'Name',
+                'Slug',
+                'Description',
+                'Parent',
+                'Products Count',
+                'Position',
+                'Status',
+                'Meta Title',
+                'Meta Description',
+                'Meta Keywords',
+                'Created At',
+                'Updated At'
             ]);
-            
+
             foreach ($categories as $category) {
                 fputcsv($file, [
                     $category->id,
@@ -435,7 +391,7 @@ class CategoryController extends Controller
                     $category->updated_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

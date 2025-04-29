@@ -29,6 +29,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\TagController;
 
 
 
