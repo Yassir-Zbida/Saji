@@ -11,11 +11,13 @@
                 <p class="mt-1 text-sm text-gray-500">Manage and view all customer orders</p>
             </div>
             <div class="mt-4 md:mt-0 flex space-x-3">
-                <a href="#"
+
+                <button type="button" onclick="exportOrders()"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                     <i class="ri-download-line mr-2"></i>
-                    Export
-                </a>
+                    Export Orders
+                </button>
+
                 <button type="button" @click="showFilters = !showFilters"
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                     <i class="ri-filter-3-line mr-2"></i>
@@ -675,5 +677,11 @@
                 return icons[paymentStatus?.toLowerCase()] || icons.default;
             }
         }
+    }
+
+
+    function exportOrders() {
+        let queryParams = new URLSearchParams(window.location.search);
+        window.location.href = "{{ route('admin.orders.export') }}?" + queryParams.toString();
     }
 </script>

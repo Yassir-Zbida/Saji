@@ -26,15 +26,15 @@ class OrdersController extends Controller
         $pendingOrders = Order::where('status', 'pending')->count();
         $completedOrders = Order::where('status', 'completed')->count();
         $totalRevenue = Order::where('payment_status', 'paid')->sum('total_amount');
-        
+
         // Calculate growth percentages
         $orderGrowth = $this->calculateOrderGrowth();
-        
+
         // For initial page load, get data if not AJAX request
         if (!$request->ajax()) {
             // Get users for filter dropdown
             $users = User::all();
-            
+
             // Initial load with empty orders - will be loaded via AJAX
             return view('dashboard.orders.index', compact(
                 'totalOrders',
@@ -49,7 +49,7 @@ class OrdersController extends Controller
             return $this->getOrdersData($request);
         }
     }
-    
+
     /**
      * Show the form for creating a new resource.
      */
@@ -59,7 +59,7 @@ class OrdersController extends Controller
         $products = Product::where('is_active', true)->where('stock_quantity', '>', 0)->get();
         return view('dashboard.orders.create', compact('customers', 'products'));
     }
-    
+
     /**
      * Store a newly created resource in storage.
      */
@@ -78,18 +78,18 @@ class OrdersController extends Controller
 
         // Start transaction
         DB::beginTransaction();
-        
+
         try {
             // Calculate total amount
             $totalAmount = 0;
             foreach ($request->products as $item) {
                 $product = Product::find($item['id']);
-                
+
                 // Check stock
                 if ($product->stock_quantity < $item['quantity']) {
                     return back()->withErrors(['products' => "Not enough stock for {$product->name}."]);
                 }
-                
+
                 $totalAmount += $product->price * $item['quantity'];
             }
 
@@ -109,7 +109,7 @@ class OrdersController extends Controller
             // Add products to order
             foreach ($request->products as $item) {
                 $product = Product::find($item['id']);
-                
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
@@ -141,15 +141,15 @@ class OrdersController extends Controller
 
             return redirect()->route('dashboard.orders.index')
                 ->with('success', 'Order created successfully.');
-                
+
         } catch (\Exception $e) {
             // Rollback transaction on error
             DB::rollBack();
-            
+
             return back()->withErrors(['error' => 'An error occurred: ' . $e->getMessage()]);
         }
     }
-    
+
     /**
      * Get orders data for AJAX requests.
      *
@@ -161,58 +161,58 @@ class OrdersController extends Controller
         // Build query with filters and eager loading
         $query = Order::with(['user', 'items'])
             ->withCount('items');
-            
+
         // Apply filters
         if ($request->has('status') && $request->status != '') {
             $query->where('status', $request->status);
         }
-        
+
         if ($request->has('payment_status') && $request->payment_status != '') {
             $query->where('payment_status', $request->payment_status);
         }
-        
+
         if ($request->has('user_id') && $request->user_id != '') {
             $query->where('user_id', $request->user_id);
         }
-        
+
         if ($request->has('date_from') && $request->date_from != '') {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
-        
+
         if ($request->has('date_to') && $request->date_to != '') {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
-        
+
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('total_amount', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhere('total_amount', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
-        
+
         // Sort orders
         $sortField = $request->input('sort_field', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
-        
+
         $query->orderBy($sortField, $sortDirection);
-        
+
         // Paginate the results
         $orders = $query->paginate($request->input('per_page', 15));
-        
+
         // Get updated statistics based on filters
         $stats = $this->getFilteredStats($request);
-        
+
         return response()->json([
             'orders' => $orders,
             'stats' => $stats
         ]);
     }
-    
+
     /**
      * Get updated statistics based on applied filters.
      *
@@ -223,39 +223,39 @@ class OrdersController extends Controller
     {
         // Base query for statistics
         $statsQuery = Order::query();
-        
+
         // Apply the same filters to get relevant stats
         if ($request->has('date_from') && $request->date_from) {
             $statsQuery->whereDate('created_at', '>=', $request->date_from);
         }
-        
+
         if ($request->has('date_to') && $request->date_to) {
             $statsQuery->whereDate('created_at', '<=', $request->date_to);
         }
-        
+
         if ($request->has('search') && $request->search) {
             $search = $request->search;
             $statsQuery->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('total_amount', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhere('total_amount', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
-        
+
         // Get counts for different statuses
         $totalOrders = (clone $statsQuery)->count();
         $pendingOrders = (clone $statsQuery)->where('status', 'pending')->count();
         $completedOrders = (clone $statsQuery)->where('status', 'completed')->count();
-        
+
         // Get revenue
         $totalRevenue = (clone $statsQuery)->where('payment_status', 'paid')->sum('total_amount');
-        
+
         // Calculate growth
         $orderGrowth = $this->calculateOrderGrowth();
-        
+
         return [
             'totalOrders' => $totalOrders,
             'pendingOrders' => $pendingOrders,
@@ -264,7 +264,7 @@ class OrdersController extends Controller
             'orderGrowth' => $orderGrowth
         ];
     }
-    
+
     /**
      * Calculate order growth percentage.
      *
@@ -275,20 +275,20 @@ class OrdersController extends Controller
         $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
         $currentMonthStart = Carbon::now()->startOfMonth();
-        
+
         $lastMonthOrders = Order::where('created_at', '>=', $lastMonthStart)
             ->where('created_at', '<=', $lastMonthEnd)
             ->count();
-            
+
         $currentMonthOrders = Order::where('created_at', '>=', $currentMonthStart)->count();
-        
+
         if ($lastMonthOrders > 0) {
             return round(($currentMonthOrders - $lastMonthOrders) / $lastMonthOrders * 100);
         }
-        
+
         return 0;
     }
-    
+
     /**
      * Display the specified resource.
      */
@@ -296,20 +296,20 @@ class OrdersController extends Controller
     {
         // Eager load all the relationships we need
         $order->load(['user', 'items.product', 'invoice']);
-        
+
         // Add some additional formatted data for the view
-        $order->formatted_subtotal = '€' . number_format($order->items->sum(function($item) {
+        $order->formatted_subtotal = '€' . number_format($order->items->sum(function ($item) {
             return $item->price * $item->quantity;
         }), 2);
-        
+
         $order->formatted_shipping = '€' . number_format($order->shipping_cost ?? 0, 2);
         $order->formatted_tax = '€' . number_format($order->tax_amount ?? 0, 2);
         $order->formatted_total = '€' . number_format($order->total_amount, 2);
-        
+
         if ($order->discount_amount > 0) {
             $order->formatted_discount = '€' . number_format($order->discount_amount, 2);
         }
-        
+
         // Add customer information
         if ($order->user) {
             $order->customer_name = $order->user->name;
@@ -322,17 +322,17 @@ class OrdersController extends Controller
             $order->customer_email = 'N/A';
             $order->customer_order_count = 0;
         }
-        
+
         // Format item prices
         foreach ($order->items as $item) {
             $item->formatted_price = '€' . number_format($item->price, 2);
             $item->formatted_total = '€' . number_format($item->price * $item->quantity, 2);
             $item->product_name = $item->product ? $item->product->name : 'Unknown Product';
         }
-        
+
         // Check if we need to load order history
         $order->history = $this->getOrderHistory($order);
-        
+
         return view('dashboard.orders.show', compact('order'));
     }
 
@@ -341,36 +341,36 @@ class OrdersController extends Controller
         // This is a placeholder - implement based on your actual history tracking
         // You might have a separate model for OrderHistory or use created_at timestamps
         // from status changes
-        
+
         $history = collect([]);
-        
+
         // Add order creation
-        $history->push((object)[
+        $history->push((object) [
             'type' => 'created',
             'created_at' => $order->created_at,
             'comment' => 'Order was created'
         ]);
-        
+
         // Add status changes if you track them
         if ($order->status != 'pending') {
-            $history->push((object)[
+            $history->push((object) [
                 'type' => 'status_change',
                 'new_status' => $order->status,
                 'created_at' => $order->updated_at,
                 'comment' => 'Order status changed to ' . ucfirst($order->status)
             ]);
         }
-        
+
         // Add payment status if paid
         if ($order->payment_status == 'paid') {
-            $history->push((object)[
+            $history->push((object) [
                 'type' => 'payment',
                 'payment_status' => 'paid',
                 'created_at' => $order->payment_date ?? $order->updated_at,
                 'comment' => 'Payment was received'
             ]);
         }
-        
+
         return $history->sortByDesc('created_at');
     }
 
@@ -399,7 +399,7 @@ class OrdersController extends Controller
 
         // Start transaction
         DB::beginTransaction();
-        
+
         try {
             $order->update([
                 'status' => $request->status,
@@ -415,7 +415,7 @@ class OrdersController extends Controller
                     $product->save();
                 }
             }
-            
+
             // If order was cancelled and now isn't, reduce stock again
             if ($oldStatus === 'cancelled' && $request->status !== 'cancelled') {
                 foreach ($order->items as $item) {
@@ -442,9 +442,9 @@ class OrdersController extends Controller
                     $order->user->notify(new OrderStatusUpdatedNotification($order));
                 }
             }
-            
+
             DB::commit();
-            
+
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -452,31 +452,31 @@ class OrdersController extends Controller
                     'order' => $order->fresh(['user', 'items.product']),
                 ]);
             }
-            
+
             return redirect()->route('dashboard.orders.index')
                 ->with('success', 'Order updated successfully.');
-                
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error updating order: ' . $e->getMessage()
                 ], 500);
             }
-            
+
             return back()->withErrors(['error' => 'An error occurred: ' . $e->getMessage()]);
         }
     }
-    
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Order $order)
     {
         DB::beginTransaction();
-        
+
         try {
             // If order is not cancelled, restore stock
             if ($order->status !== 'cancelled') {
@@ -492,11 +492,11 @@ class OrdersController extends Controller
             if ($order->invoice) {
                 $order->invoice->delete();
             }
-            
+
             $order->delete();
-            
+
             DB::commit();
-            
+
             if (request()->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -506,21 +506,21 @@ class OrdersController extends Controller
 
             return redirect()->route('dashboard.orders.index')
                 ->with('success', 'Order deleted successfully.');
-                
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             if (request()->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error deleting order: ' . $e->getMessage()
                 ], 500);
             }
-            
+
             return back()->withErrors(['error' => 'An error occurred: ' . $e->getMessage()]);
         }
     }
-    
+
     /**
      * Update order status via AJAX.
      *
@@ -533,17 +533,17 @@ class OrdersController extends Controller
         $request->validate([
             'status' => 'required|in:pending,processing,shipped,delivered,completed,cancelled'
         ]);
-        
+
         $order = Order::findOrFail($id);
         $oldStatus = $order->status;
-        
+
         // Start transaction
         DB::beginTransaction();
-        
+
         try {
             $order->status = $request->status;
             $order->save();
-            
+
             // Handle inventory if status is cancelled or uncancelled
             if ($request->status === 'cancelled' && $oldStatus !== 'cancelled') {
                 foreach ($order->items as $item) {
@@ -558,30 +558,30 @@ class OrdersController extends Controller
                     $product->save();
                 }
             }
-            
+
             // Notify customer if enabled
             if ($request->has('notify') && $request->notify && $order->user) {
                 $order->user->notify(new OrderStatusUpdatedNotification($order));
             }
-            
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order status updated successfully',
                 'order' => $order->fresh()
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating order status: ' . $e->getMessage()
             ], 500);
         }
     }
-    
+
     /**
      * Update payment status via AJAX.
      *
@@ -594,16 +594,16 @@ class OrdersController extends Controller
         $request->validate([
             'payment_status' => 'required|in:pending,paid,failed,refunded'
         ]);
-        
+
         $order = Order::findOrFail($id);
         $oldPaymentStatus = $order->payment_status;
-        
+
         DB::beginTransaction();
-        
+
         try {
             $order->payment_status = $request->payment_status;
             $order->save();
-            
+
             // Update invoice if payment status changed
             if ($request->payment_status !== $oldPaymentStatus && $order->invoice) {
                 if ($request->payment_status === 'paid') {
@@ -614,30 +614,30 @@ class OrdersController extends Controller
                     $order->invoice->update(['status' => 'refunded']);
                 }
             }
-            
+
             // Notify customer if enabled
             if ($request->has('notify') && $request->notify && $order->user) {
                 $order->user->notify(new OrderStatusUpdatedNotification($order));
             }
-            
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Payment status updated successfully',
                 'order' => $order->fresh()
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating payment status: ' . $e->getMessage()
             ], 500);
         }
     }
-    
+
     /**
      * Display invoice for an order.
      */
@@ -646,65 +646,64 @@ class OrdersController extends Controller
         $order->load('user', 'items.product', 'invoice');
         return view('dashboard.orders.invoice', compact('order'));
     }
-    
+
     /**
      * Generate and download invoice PDF.
      */
     public function generateInvoice(Order $order)
     {
         $order->load('user', 'items.product', 'invoice');
-        
+
         // Generate PDF (implementation depends on your PDF library)
         // This is just a placeholder - implement your actual PDF generation
-        
+
         return back()->with('success', 'Invoice generated successfully.');
     }
-    
     /**
      * Export orders to CSV.
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
     public function export(Request $request)
     {
         $query = Order::with('user');
-        
-        // Apply the same filters as in getOrdersData method
+
         if ($request->has('status') && $request->status != '') {
             $query->where('status', $request->status);
         }
-        
+
         if ($request->has('payment_status') && $request->payment_status != '') {
             $query->where('payment_status', $request->payment_status);
         }
-        
+
         if ($request->has('user_id') && $request->user_id != '') {
             $query->where('user_id', $request->user_id);
         }
-        
+
         if ($request->has('date_from') && $request->date_from != '') {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
-        
+
         if ($request->has('date_to') && $request->date_to != '') {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
-        
+
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
-        
+
         $orders = $query->get();
-        
-        // Generate CSV filename
+
         $filename = 'orders_export_' . date('Y-m-d_His') . '.csv';
-        
-        // Set headers for CSV download
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -712,43 +711,38 @@ class OrdersController extends Controller
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Expires' => '0'
         ];
-        
-        // Create CSV file
-        $handle = fopen('php://temp', 'r+');
-        
-        // Add CSV headers
-        fputcsv($handle, [
-            'Order #',
-            'Date',
-            'Customer',
-            'Email',
-            'Status',
-            'Payment Status',
-            'Items',
-            'Total Amount',
-        ]);
-        
-        // Add order data
-        foreach ($orders as $order) {
+
+        $callback = function () use ($orders) {
+            $handle = fopen('php://output', 'w');
+
             fputcsv($handle, [
-                $order->order_number,
-                $order->created_at->format('Y-m-d H:i:s'),
-                $order->user ? $order->user->name : 'Guest',
-                $order->user ? $order->user->email : 'N/A',
-                ucfirst($order->status),
-                ucfirst($order->payment_status),
-                $order->items->sum('quantity'),
-                $order->total_amount,
+                'Order #',
+                'Date',
+                'Customer',
+                'Email',
+                'Status',
+                'Payment Status',
+                'Items',
+                'Total Amount',
             ]);
-        }
-        
-        // Reset file pointer
-        rewind($handle);
-        
-        // Get content
-        $content = stream_get_contents($handle);
-        fclose($handle);
-        
-        return response($content, 200, $headers);
+
+            foreach ($orders as $order) {
+                fputcsv($handle, [
+                    $order->order_number,
+                    $order->created_at->format('Y-m-d H:i:s'),
+                    $order->user ? $order->user->name : 'Guest',
+                    $order->user ? $order->user->email : 'N/A',
+                    ucfirst($order->status),
+                    ucfirst($order->payment_status),
+                    $order->items->sum('quantity'),
+                    $order->total_amount,
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
-} 
+
+}

@@ -37,7 +37,6 @@ Route::get('/', [HomeController::class, 'index'])->name('ù');
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
-Route::get('/terms', [PageController::class, 'terms'])->name('terms');
 Route::get('/privacy', [PageController::class, 'privacy'])->name('privacy');
 Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 
@@ -90,7 +89,7 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/account/tickets/{ticket}/close', [SupportTicketController::class, 'customerClose'])->name('account.tickets.close');
     Route::post('/account/tickets/{ticket}/reopen', [SupportTicketController::class, 'customerReopen'])->name('account.tickets.reopen');
     
-    Route::get('/product/{id}', [ShopController::class, 'product'])->name('products.show');
+    // Route::get('/product/{id}', [ShopController::class, 'product'])->name('products.show');
 
      Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
      Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -123,9 +122,9 @@ Route::prefix('cart/ajax')->group(function () {
 // Cart Routes
 Route::post('/cart/ajax/add', [App\Http\Controllers\AjaxCartController::class, 'addToCart'])->name('cart.ajax.add');
 Route::get('/cart', [App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/update/{id}', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
-Route::post('/cart/remove/{id}', [App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
-Route::post('/cart/clear', [App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
+// Route::post('/cart/update/{id}', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
+// Route::post('/cart/remove/{id}', [App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
+// Route::post('/cart/clear', [App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
 Route::post('/cart/apply-coupon', [App\Http\Controllers\CartController::class, 'applyCoupon'])->name('cart.apply-coupon');
 Route::post('/cart/ajax/clear', [App\Http\Controllers\AjaxCartController::class, 'clearCart']);
 Route::post('/cart/ajax/apply-coupon', [App\Http\Controllers\AjaxCartController::class, 'applyCoupon']);
@@ -349,9 +348,9 @@ Route::post('/stripe/webhook', [StripeController::class, 'handleWebhook'])->name
 // Error Handling
 
 // 404 error view 
-Route::fallback(function () {
-    return view('errors.404');
-});
+// Route::fallback(function () {
+//     return view('errors.404');
+// });
 
 // 403 Forbidden error view
 Route::get('/403', function () {
@@ -434,7 +433,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('/orders/{id}/status', [OrdersController::class, 'updateStatus'])->name('orders.update-status');
     Route::patch('/orders/{id}/payment', [OrdersController::class, 'updatePaymentStatus'])->name('orders.update-payment');
     Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
-    
+    Route::get('/orders/export', [App\Http\Controllers\OrdersController::class, 'export'])->name('admin.orders.export');
     // Customers
     Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('admin.customers.show');

@@ -4,7 +4,6 @@
 
 @section('content')
     <div class="container mx-auto" x-data="productsData()">
-        <!-- Page Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">Products</h1>
@@ -777,7 +776,6 @@
                     }
                 }
 
-                // Redirect to export URL with current filters
                 window.location.href = `/admin/products/export?${queryParams.toString()}`;
             },
 
