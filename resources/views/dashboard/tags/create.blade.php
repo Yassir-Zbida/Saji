@@ -101,16 +101,65 @@
                                     <span class="block text-xs text-center mt-1" x-text="colorOption.label"></span>
                                 </div>
                             </template>
+                            
+                            <!-- Custom Color Option -->
+                            <div class="relative">
+                                <button type="button"
+                                    @click="customColorMode = true"
+                                    :class="[
+                                        'w-10 h-10 rounded-full border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary',
+                                        customColorSelected ? 'border-gray-900' : 'border-transparent'
+                                    ]"
+                                    :style="{ backgroundColor: customColorHex }">
+                                    <span class="sr-only">Custom</span>
+                                    <span x-show="customColorSelected" class="absolute inset-0 flex items-center justify-center">
+                                        <svg class="h-3 w-3 text-white" viewBox="0 0 12 12" fill="currentColor">
+                                            <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <span class="block text-xs text-center mt-1">Custom</span>
+                            </div>
                         </div>
-                        <input type="hidden" name="color" :value="selectedColor">
+                        
+                        <!-- Custom Color Picker -->
+                        <div x-show="customColorMode" class="mt-4 p-4 border rounded-md shadow-sm">
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Select Custom Color</label>
+                                <div class="flex items-center space-x-3">
+                                    <input type="color" x-model="customColorHex" class="h-10 w-16 p-0 border-0"
+                                        @change="selectCustomColor()">
+                                    <input type="text" x-model="customColorHex" class="block w-32 rounded-md border p-2 border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20 sm:text-sm"
+                                        placeholder="#000000" 
+                                        @input="selectCustomColor()">
+                                    <button type="button" 
+                                        @click="applyCustomColor()"
+                                        class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring focus:ring-primary focus:ring-opacity-20">
+                                        Apply
+                                    </button>
+                                    <button type="button" 
+                                        @click="customColorMode = false"
+                                        class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring focus:ring-primary focus:ring-opacity-20">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="color" :value="selectedColorValue">
+                        <input type="hidden" name="color_hex" :value="selectedColorHex">
                     </div>
+                    
                     <div class="mt-3">
                         <div class="flex items-center space-x-2">
-                            <div class="w-6 h-6 rounded-full" :style="{ backgroundColor: getColorHex(selectedColor) }"></div>
-                            <span class="text-sm font-medium" x-text="getColorLabel(selectedColor)"></span>
+                            <div class="w-6 h-6 rounded-full" :style="{ backgroundColor: selectedColorHex }"></div>
+                            <span class="text-sm font-medium" x-text="selectedColorLabel"></span>
                         </div>
                     </div>
                     @error('color')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    @error('color_hex')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -156,6 +205,9 @@
         function tagFormData() {
             return {
                 selectedColor: '{{ old('color', 'blue') }}',
+                customColorMode: false,
+                customColorSelected: {{ old('color') == 'custom' ? 'true' : 'false' }},
+                customColorHex: '{{ old('color_hex', '#3B82F6') }}',
                 colors: [
                     { value: 'red', label: 'Red', hex: '#EF4444' },
                     { value: 'blue', label: 'Blue', hex: '#3B82F6' },
@@ -167,6 +219,18 @@
                     { value: 'gray', label: 'Gray', hex: '#6B7280' },
                     { value: 'black', label: 'Black', hex: '#111827' },
                 ],
+                
+                get selectedColorValue() {
+                    return this.customColorSelected ? 'custom' : this.selectedColor;
+                },
+                
+                get selectedColorHex() {
+                    return this.customColorSelected ? this.customColorHex : this.getColorHex(this.selectedColor);
+                },
+                
+                get selectedColorLabel() {
+                    return this.customColorSelected ? 'Custom' : this.getColorLabel(this.selectedColor);
+                },
                 
                 init() {
                     // Auto-generate slug from name
@@ -194,10 +258,29 @@
                             slugInput.dataset.auto = 'false';
                         });
                     }
+                    
+                    // Initialize custom color if needed
+                    if (this.selectedColor === 'custom') {
+                        this.customColorSelected = true;
+                    }
                 },
                 
                 selectColor(color) {
                     this.selectedColor = color;
+                    this.customColorSelected = false;
+                },
+                
+                selectCustomColor() {
+                    // Validate hex color format
+                    const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+                    if (!hexRegex.test(this.customColorHex)) {
+                        this.customColorHex = '#3B82F6'; // Default to blue if invalid
+                    }
+                },
+                
+                applyCustomColor() {
+                    this.customColorSelected = true;
+                    this.customColorMode = false;
                 },
                 
                 getColorHex(colorValue) {

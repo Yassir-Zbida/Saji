@@ -238,7 +238,8 @@
                                         <span x-text="tag.products_count || 0"></span> products
                                     </span>
                                     <div class="flex space-x-1">
-                                        <a :href="`{{ url('/admin/tags') }}/${tag.id}/edit`" class="text-gray-500 hover:text-primary">
+                                        <a :href="`{{ url('/admin/tags') }}/${tag.id}/edit`"
+                                            class="text-gray-500 hover:text-primary">
                                             <i class="ri-pencil-line"></i>
                                         </a>
                                         <button @click="confirmDelete(tag)" class="text-gray-500 hover:text-red-600">
@@ -316,7 +317,7 @@
                                 <button @click="goToPage(page)"
                                     class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50"
                                     :class="page === currentPage ?
-                                        'z-10 bg-primary text-white border-primary hover:text-black' :
+                                        'z-10 bg-primary text-black border-primary hover:bg-black hover:text-white transition' :
                                         'text-gray-500'">
                                     <span x-text="page"></span>
                                 </button>
@@ -334,59 +335,65 @@
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <div x-show="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-                </div>
-                <!-- Modal -->
-                <div
-                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div
-                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <i class="ri-error-warning-line text-red-600"></i>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">Delete Tag</h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500">
-                                        Are you sure you want to delete the tag <span class="font-medium"
-                                            x-text="tagToDelete?.name"></span>? This action cannot be undone and may affect
-                                        products that have this tag.
-                                    </p>
-                                    <div class="mt-3 bg-yellow-50 p-3 rounded-md" x-show="tagHasProducts">
-                                        <p class="text-sm text-yellow-700">
-                                            <i class="ri-alert-line mr-1"></i> This tag has <span class="font-medium"
-                                                x-text="tagToDelete?.products_count"></span> product(s) assigned to it.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<div x-show="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+        
+        <!-- Modal -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <!-- Modal Header -->
+            <div class="bg-white px-6 pt-6 pb-4">
+                <div class="flex items-center justify-center mb-4">
+                    <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <i class="ri-error-warning-line text-red-600 text-xl"></i>
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <form :action="'{{ route('tags.destroy', ':id') }}'.replace(':id', tagToDelete?.id)" method="POST" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                                :disabled="isDeleting">
-                                <span x-show="isDeleting" class="inline-block animate-spin mr-2">
-                                    <i class="ri-loader-4-line"></i>
-                                </span>
-                                <span>Delete</span>
-                            </button>
-                        </form>
-                        <button type="button" @click="showDeleteModal = false"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancel
-                        </button>
+                </div>
+                
+                <div class="text-center">
+                    <h3 class="text-xl leading-6 font-medium text-gray-900 mb-3">Delete Tag</h3>
+                    <p class="text-sm text-gray-500 mx-auto max-w-md">
+                        Are you sure you want to delete the tag <span class="font-medium" x-text="tagToDelete?.name"></span>? This action cannot be undone and may affect products that have this tag.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Warning Messages -->
+            <div class="px-6 pb-4 space-y-3">
+                <div class="bg-yellow-50 p-4 rounded-md" x-show="tagHasProducts">
+                    <div class="flex items-center justify-center">
+                        <i class="ri-alert-line text-yellow-700 mr-2 text-lg"></i>
+                        <p class="text-sm text-yellow-700">
+                            This tag has <span class="font-medium" x-text="tagToDelete?.products_count"></span> product(s) assigned to it.
+                        </p>
                     </div>
                 </div>
             </div>
+            
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 px-6 py-4 flex justify-center gap-4">
+                <button type="button" @click="showDeleteModal = false"
+                    class="w-1/2 rounded-md border border-gray-200 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Cancel
+                </button>
+                <form :action="'{{ route('tags.destroy', ':id') }}'.replace(':id', tagToDelete?.id)" method="POST" class="w-1/2">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="w-full rounded-md border border-transparent shadow-sm px-4 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        :disabled="isDeleting">
+                        <span x-show="isDeleting" class="inline-block animate-spin mr-2">
+                            <i class="ri-loader-4-line"></i>
+                        </span>
+                        <span>Delete</span>
+                    </button>
+                </form>
+            </div>
         </div>
+    </div>
+</div>
     </div>
 @endsection
 
