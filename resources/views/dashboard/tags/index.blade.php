@@ -147,14 +147,9 @@
                                 <select id="color" name="color" x-model="filters.color"
                                     class="block w-full pl-4 pr-10 py-2.5 rounded-lg border-gray-200 bg-gray-50 focus:border-primary focus:ring focus:ring-primary/20 focus:ring-opacity-50 text-sm transition-all shadow-sm">
                                     <option value="">All Colors</option>
-                                    <option value="red">Red</option>
-                                    <option value="blue">Blue</option>
-                                    <option value="green">Green</option>
-                                    <option value="yellow">Yellow</option>
-                                    <option value="purple">Purple</option>
-                                    <option value="pink">Pink</option>
-                                    <option value="gray">Gray</option>
-                                    <option value="black">Black</option>
+                                    <template x-for="colorOption in colorOptions" :key="colorOption.hex">
+                                        <option :value="colorOption.hex" x-text="colorOption.label"></option>
+                                    </template>
                                 </select>
                             </div>
                         </div>
@@ -217,9 +212,9 @@
             <div class="p-6" x-show="!isLoading">
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     <template x-for="tag in tags" :key="tag.id">
-                        <div
-                            class="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                            <div class="p-4" :class="'border-t-4 border-' + (tag.color || 'gray') + '-500'">
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            <!-- Use inline style for the top border color with the hex color -->
+                            <div class="p-4" :style="'border-top: 4px solid ' + (tag.color || '#6B7280')">
                                 <div class="flex justify-between items-start mb-3">
                                     <h4 class="text-md font-medium text-gray-900 truncate" x-text="tag.name"></h4>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -335,65 +330,65 @@
         </div>
 
         <!-- Delete Confirmation Modal -->
-<div x-show="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        
-        <!-- Modal -->
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <!-- Modal Header -->
-            <div class="bg-white px-6 pt-6 pb-4">
-                <div class="flex items-center justify-center mb-4">
-                    <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                        <i class="ri-error-warning-line text-red-600 text-xl"></i>
-                    </div>
+        <div x-show="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
                 </div>
                 
-                <div class="text-center">
-                    <h3 class="text-xl leading-6 font-medium text-gray-900 mb-3">Delete Tag</h3>
-                    <p class="text-sm text-gray-500 mx-auto max-w-md">
-                        Are you sure you want to delete the tag <span class="font-medium" x-text="tagToDelete?.name"></span>? This action cannot be undone and may affect products that have this tag.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Warning Messages -->
-            <div class="px-6 pb-4 space-y-3">
-                <div class="bg-yellow-50 p-4 rounded-md" x-show="tagHasProducts">
-                    <div class="flex items-center justify-center">
-                        <i class="ri-alert-line text-yellow-700 mr-2 text-lg"></i>
-                        <p class="text-sm text-yellow-700">
-                            This tag has <span class="font-medium" x-text="tagToDelete?.products_count"></span> product(s) assigned to it.
-                        </p>
+                <!-- Modal -->
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <!-- Modal Header -->
+                    <div class="bg-white px-6 pt-6 pb-4">
+                        <div class="flex items-center justify-center mb-4">
+                            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                                <i class="ri-error-warning-line text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <h3 class="text-xl leading-6 font-medium text-gray-900 mb-3">Delete Tag</h3>
+                            <p class="text-sm text-gray-500 mx-auto max-w-md">
+                                Are you sure you want to delete the tag <span class="font-medium" x-text="tagToDelete?.name"></span>? This action cannot be undone and may affect products that have this tag.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Warning Messages -->
+                    <div class="px-6 pb-4 space-y-3">
+                        <div class="bg-yellow-50 p-4 rounded-md" x-show="tagHasProducts">
+                            <div class="flex items-center justify-center">
+                                <i class="ri-alert-line text-yellow-700 mr-2 text-lg"></i>
+                                <p class="text-sm text-yellow-700">
+                                    This tag has <span class="font-medium" x-text="tagToDelete?.products_count"></span> product(s) assigned to it.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="bg-gray-50 px-6 py-4 flex justify-center gap-4">
+                        <button type="button" @click="showDeleteModal = false"
+                            class="w-1/2 rounded-md border border-gray-200 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            Cancel
+                        </button>
+                        <form :action="'{{ route('tags.destroy', ':id') }}'.replace(':id', tagToDelete?.id)" method="POST" class="w-1/2">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                class="w-full rounded-md border border-transparent shadow-sm px-4 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                :disabled="isDeleting">
+                                <span x-show="isDeleting" class="inline-block animate-spin mr-2">
+                                    <i class="ri-loader-4-line"></i>
+                                </span>
+                                <span>Delete</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
-            
-            <!-- Modal Footer -->
-            <div class="bg-gray-50 px-6 py-4 flex justify-center gap-4">
-                <button type="button" @click="showDeleteModal = false"
-                    class="w-1/2 rounded-md border border-gray-200 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    Cancel
-                </button>
-                <form :action="'{{ route('tags.destroy', ':id') }}'.replace(':id', tagToDelete?.id)" method="POST" class="w-1/2">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                        class="w-full rounded-md border border-transparent shadow-sm px-4 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                        :disabled="isDeleting">
-                        <span x-show="isDeleting" class="inline-block animate-spin mr-2">
-                            <i class="ri-loader-4-line"></i>
-                        </span>
-                        <span>Delete</span>
-                    </button>
-                </form>
-            </div>
         </div>
-    </div>
-</div>
     </div>
 @endsection
 
@@ -429,6 +424,17 @@
             showFilters: false,
             showDeleteModal: false,
             tagHasProducts: false,
+            colorOptions: [
+                { label: 'Red', hex: '#EF4444' },
+                { label: 'Blue', hex: '#3B82F6' },
+                { label: 'Green', hex: '#10B981' },
+                { label: 'Yellow', hex: '#F59E0B' },
+                { label: 'Purple', hex: '#8B5CF6' },
+                { label: 'Pink', hex: '#EC4899' },
+                { label: 'Indigo', hex: '#6366F1' },
+                { label: 'Gray', hex: '#6B7280' },
+                { label: 'Black', hex: '#111827' }
+            ],
 
             init() {
                 this.fetchTags();
@@ -475,6 +481,22 @@
                     .then(data => {
                         if (!data.error) {
                             this.tags = data.tags.data;
+                            // Process any legacy color names to hex
+                            this.tags = this.tags.map(tag => {
+                                // Check if the color is not a hex code
+                                if (tag.color && !tag.color.startsWith('#')) {
+                                    // Find the corresponding hex code
+                                    const colorObj = this.colorOptions.find(c => c.label.toLowerCase() === tag.color.toLowerCase());
+                                    if (colorObj) {
+                                        tag.color = colorObj.hex;
+                                    } else {
+                                        // Default gray if not found
+                                        tag.color = '#6B7280';
+                                    }
+                                }
+                                return tag;
+                            });
+                            
                             this.pagination = {
                                 current_page: data.tags.current_page,
                                 per_page: data.tags.per_page,
