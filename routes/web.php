@@ -460,7 +460,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/customers/{customer}', [CustomersController::class, 'destroy'])->name('admin.customers.destroy');
     Route::get('/customers-data', [CustomersController::class, 'getCustomers'])->name('admin.customers.data');
     Route::get('/customers/{customer}/details', [CustomersController::class, 'getCustomerDetails'])->name('admin.customers.details');
-    Route::post('/customers/bulk-action', [CustomersController::class, 'bulkActionAjax'])->name('admin.customers.bulk-action');
+    // Route::post('/customers/bulk-action', [CustomersController::class, 'bulkActionAjax'])->name('admin.customers.bulk-action');
     Route::post('/customers/{customer}/verify-email', [CustomersController::class, 'verifyEmail'])->name('admin.customers.verify-email');
     Route::post('/customers/{customer}/reset-password', [CustomersController::class, 'resetPassword'])->name('admin.customers.reset-password');
        Route::get('/impersonate/{customer}', [CustomersController::class, 'impersonate'])->name('admin.impersonate');
