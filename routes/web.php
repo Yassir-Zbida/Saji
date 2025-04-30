@@ -24,7 +24,7 @@ use App\Http\Controllers\AddressController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\OrdersController;
-use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\MarketingController;
@@ -448,12 +448,25 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::patch('/orders/{id}/status', [OrdersController::class, 'updateStatus'])->name('orders.update-status');
     Route::patch('/orders/{id}/payment', [OrdersController::class, 'updatePaymentStatus'])->name('orders.update-payment');
     Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
-    // Route::get('/orders/export', [OrdersController::class, 'export'])->name('admin.orders.export');
-    // Customers
-    Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');
-    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('admin.customers.show');
-    Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('admin.customers.edit');
-    Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('admin.customers.update');
+
+    Route::get('/customers/export', [CustomersController::class, 'export'])->name('admin.customers.export');
+    Route::get('/customers/statistics', [CustomersController::class, 'getStatistics'])->name('admin.customers.statistics');
+    Route::get('/customers', [CustomersController::class, 'index'])->name('admin.customers');
+    Route::get('/customers/create', [CustomersController::class, 'create'])->name('admin.customers.create');
+    Route::post('/customers', [CustomersController::class, 'store'])->name('admin.customers.store');
+    Route::get('/customers/{customer}', [CustomersController::class, 'show'])->name('admin.customers.show');
+    Route::get('/customers/{customer}/edit', [CustomersController::class, 'edit'])->name('admin.customers.edit');
+    Route::put('/customers/{customer}', [CustomersController::class, 'update'])->name('admin.customers.update');
+    Route::delete('/customers/{customer}', [CustomersController::class, 'destroy'])->name('admin.customers.destroy');
+    Route::get('/customers-data', [CustomersController::class, 'getCustomers'])->name('admin.customers.data');
+    Route::get('/customers/{customer}/details', [CustomersController::class, 'getCustomerDetails'])->name('admin.customers.details');
+    Route::post('/customers/bulk-action', [CustomersController::class, 'bulkActionAjax'])->name('admin.customers.bulk-action');
+    Route::post('/customers/{customer}/verify-email', [CustomersController::class, 'verifyEmail'])->name('admin.customers.verify-email');
+    Route::post('/customers/{customer}/reset-password', [CustomersController::class, 'resetPassword'])->name('admin.customers.reset-password');
+       Route::get('/impersonate/{customer}', [CustomersController::class, 'impersonate'])->name('admin.impersonate');
+    Route::get('/stop-impersonating', [CustomersController::class, 'stopImpersonating'])->name('admin.stop-impersonating');
+    
+
 
     // Support Tickets
     Route::get('/tickets', [TicketController::class, 'index'])->name('admin.tickets');

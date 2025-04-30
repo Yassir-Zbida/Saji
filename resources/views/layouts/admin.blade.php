@@ -267,10 +267,10 @@
                         </li>
                         <li>
                             <a href=""
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.content*') ? 'active' : '' }}">
-                                <i class="ri-file-text-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
-                                <span class="nav-text">Content</span>
-                                <span class="tooltip-text" x-show="sidebarCollapsed">Content</span>
+                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.ticket*') ? 'active' : '' }}">
+                                <i class="ri-coupon-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
+                                <span class="nav-text">Tickets</span>
+                                <span class="tooltip-text" x-show="sidebarCollapsed">Tickets</span>
                             </a>
                         </li>
                         <li>
@@ -283,51 +283,19 @@
                         </li>
                         <li>
                             <a href=""
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.marketing*') ? 'active' : '' }}">
-                                <i class="ri-megaphone-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
-                                <span class="nav-text">Marketing</span>
-                                <span class="tooltip-text" x-show="sidebarCollapsed">Marketing</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href=""
                                 class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.discounts*') ? 'active' : '' }}">
                                 <i class="ri-percent-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Discounts</span>
                                 <span class="tooltip-text" x-show="sidebarCollapsed">Discounts</span>
                             </a>
                         </li>
-                        <li x-data="{ open: false }">
-                            <div class="tooltip px-4 py-2.5 flex items-center justify-between cursor-pointer text-gray-700 hover:bg-gray-100 rounded-lg nav-item transition-colors"
-                                @click="open = !open">
-                                <div class="flex items-center">
-                                    <i class="ri-store-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
-                                    <span class="nav-text">Sales channels</span>
-                                </div>
-                                <i class="ri-arrow-down-s-line transition-transform nav-text"
-                                    :class="open ? 'transform rotate-180' : ''"></i>
-                                <span class="tooltip-text" x-show="sidebarCollapsed">Sales channels</span>
-                            </div>
-                            <div x-show="open && !sidebarCollapsed" class="pl-10 pr-4 mt-1 space-y-1"
-                                style="display: none;">
-                                <a href="#"
-                                    class="block py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-colors">Online
-                                    Store</a>
-                                <a href="#"
-                                    class="block py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-colors">Marketplaces</a>
-                            </div>
-                        </li>
+                        
                     </ul>
                 </nav>
 
                 <!-- Admin Profile & Settings at bottom -->
                 <div class="mt-auto border-t border-gray-100 py-3 px-3">
-                    <a href=""
-                        class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
-                        <i class="ri-settings-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
-                        <span class="nav-text">Settings</span>
-                        <span class="tooltip-text" x-show="sidebarCollapsed">Settings</span>
-                    </a>
+                    
 
                     <div class="tooltip flex items-center px-4 py-3 mt-2 rounded-lg bg-gray-50 nav-item">
                         <div

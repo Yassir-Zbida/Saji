@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CustomersController extends Controller
 {
@@ -44,7 +45,7 @@ class CustomersController extends Controller
         
         $users = $query->paginate(10);
         
-        return view('admin.users.index', compact('users'));
+        return view('dashboard.customers.index', compact('users'));
     }
 
     /**
@@ -53,13 +54,25 @@ class CustomersController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getUsers(Request $request)
+    public function getCustomers(Request $request)
     {
         $query = User::query();
         
         // Apply filters
         if ($request->has('role') && $request->role != '') {
             $query->where('role', $request->role);
+        }
+        
+        if ($request->has('verified') && $request->verified != '') {
+            if ($request->verified == 'verified') {
+                $query->whereNotNull('email_verified_at');
+            } else if ($request->verified == 'unverified') {
+                $query->whereNull('email_verified_at');
+            }
+        }
+        
+        if ($request->has('date_from') && $request->date_from != '') {
+            $query->whereDate('created_at', '>=', $request->date_from);
         }
         
         if ($request->has('search') && $request->search != '') {
@@ -104,52 +117,32 @@ class CustomersController extends Controller
     /**
      * Get user details for modal.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getUserDetails(User $user)
+    public function getCustomerDetails(User $customer)
     {
-        $userData = [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role,
-            'phone' => $user->phone,
-            'address' => $user->address,
-            'city' => $user->city,
-            'state' => $user->state,
-            'zip_code' => $user->zip_code,
-            'country' => $user->country,
-            'email_verified_at' => $user->email_verified_at,
-            'created_at' => $user->created_at,
-            'updated_at' => $user->updated_at,
-        ];
-        
         // Load relationships if they exist
-        $relationData = [];
-        
-        if (method_exists($user, 'orders')) {
-            $recentOrders = $user->orders()->latest()->take(5)->get();
-            $orderCount = $user->orders()->count();
-            $relationData['orders'] = [
-                'count' => $orderCount,
-                'recent' => $recentOrders
-            ];
+        if (method_exists($customer, 'orders')) {
+            $customer->load('orders');
         }
         
-        if (method_exists($user, 'supportTickets')) {
-            $recentTickets = $user->supportTickets()->latest()->take(5)->get();
-            $ticketCount = $user->supportTickets()->count();
-            $relationData['tickets'] = [
-                'count' => $ticketCount,
-                'recent' => $recentTickets
-            ];
+        if (method_exists($customer, 'supportTickets')) {
+            $customer->load('supportTickets');
+        }
+        
+        // Ensure orders and tickets are arrays even if they don't exist
+        $userData = $customer->toArray();
+        if (!isset($userData['orders'])) {
+            $userData['orders'] = [];
+        }
+        if (!isset($userData['tickets'])) {
+            $userData['tickets'] = [];
         }
         
         return response()->json([
             'success' => true,
-            'user' => $userData,
-            'relations' => $relationData
+            'user' => $userData
         ]);
     }
 
@@ -160,7 +153,7 @@ class CustomersController extends Controller
      */
     public function create()
     {
-        return view('admin.users.create');
+        return view('dashboard.customers.create');
     }
 
     /**
@@ -197,7 +190,7 @@ class CustomersController extends Controller
             'country' => $request->country,
         ]);
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.customers')
             ->with('success', 'User created successfully.');
     }
 
@@ -252,42 +245,42 @@ class CustomersController extends Controller
     /**
      * Display the specified user.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\Response
      */
-    public function show(User $user)
+    public function show(User $customer)
     {
         // Load relationships if they exist
-        if (method_exists($user, 'orders')) {
-            $user->load('orders');
+        if (method_exists($customer, 'orders')) {
+            $customer->load('orders');
         }
         
-        if (method_exists($user, 'supportTickets')) {
-            $user->load('supportTickets');
+        if (method_exists($customer, 'supportTickets')) {
+            $customer->load('supportTickets');
         }
         
-        return view('admin.users.show', compact('user'));
+        return view('dashboard.customers.show', compact('customer'));
     }
 
     /**
      * Show the form for editing the specified user.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\Response
      */
-    public function edit(User $user)
+    public function edit(User $customer)
     {
-        return view('admin.users.edit', compact('user'));
+        return view('dashboard.customers.edit', compact('customer'));
     }
 
     /**
      * Update the specified user in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $customer)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -296,7 +289,7 @@ class CustomersController extends Controller
                 'string',
                 'email',
                 'max:255',
-                Rule::unique('users')->ignore($user->id),
+                Rule::unique('users')->ignore($customer->id),
             ],
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|in:admin,manager,customer,support_agent',
@@ -324,9 +317,9 @@ class CustomersController extends Controller
             $userData['password'] = Hash::make($request->password);
         }
 
-        $user->update($userData);
+        $customer->update($userData);
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.customers')
             ->with('success', 'User updated successfully.');
     }
 
@@ -334,10 +327,10 @@ class CustomersController extends Controller
      * Update a user via AJAX.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateAjax(Request $request, User $user)
+    public function updateAjax(Request $request, User $customer)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -346,7 +339,7 @@ class CustomersController extends Controller
                 'string',
                 'email',
                 'max:255',
-                Rule::unique('users')->ignore($user->id),
+                Rule::unique('users')->ignore($customer->id),
             ],
             'password' => 'nullable|string|min:8',
             'role' => 'required|in:admin,manager,customer,support_agent',
@@ -381,36 +374,36 @@ class CustomersController extends Controller
             $userData['password'] = Hash::make($request->password);
         }
         
-        $user->update($userData);
+        $customer->update($userData);
         
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully',
-            'user' => $user
+            'user' => $customer
         ]);
     }
 
     /**
      * Remove the specified user from storage.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy(User $customer)
     {
         // Prevent deleting yourself
-        if ($user->id === auth()->id()) {
+        if ($customer->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
         
         // Check if user has related records
         $hasRelatedRecords = false;
         
-        if (method_exists($user, 'orders') && $user->orders()->count() > 0) {
+        if (method_exists($customer, 'orders') && $customer->orders()->count() > 0) {
             $hasRelatedRecords = true;
         }
         
-        if (method_exists($user, 'supportTickets') && $user->supportTickets()->count() > 0) {
+        if (method_exists($customer, 'supportTickets') && $customer->supportTickets()->count() > 0) {
             $hasRelatedRecords = true;
         }
         
@@ -418,22 +411,22 @@ class CustomersController extends Controller
             return back()->with('error', 'Cannot delete user with related records.');
         }
 
-        $user->delete();
+        $customer->delete();
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.customers')
             ->with('success', 'User deleted successfully.');
     }
 
     /**
      * Delete a user via AJAX.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroyAjax(User $user)
+    public function destroyAjax(User $customer)
     {
         // Prevent deleting yourself
-        if ($user->id === auth()->id()) {
+        if ($customer->id === auth()->id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'You cannot delete your own account.'
@@ -444,14 +437,14 @@ class CustomersController extends Controller
         $hasRelatedRecords = false;
         $relatedRecords = [];
         
-        if (method_exists($user, 'orders') && $user->orders()->count() > 0) {
+        if (method_exists($customer, 'orders') && $customer->orders()->count() > 0) {
             $hasRelatedRecords = true;
-            $relatedRecords['orders'] = $user->orders()->count();
+            $relatedRecords['orders'] = $customer->orders()->count();
         }
         
-        if (method_exists($user, 'supportTickets') && $user->supportTickets()->count() > 0) {
+        if (method_exists($customer, 'supportTickets') && $customer->supportTickets()->count() > 0) {
             $hasRelatedRecords = true;
-            $relatedRecords['tickets'] = $user->supportTickets()->count();
+            $relatedRecords['tickets'] = $customer->supportTickets()->count();
         }
         
         if ($hasRelatedRecords) {
@@ -462,7 +455,7 @@ class CustomersController extends Controller
             ], 422);
         }
         
-        $user->delete();
+        $customer->delete();
         
         return response()->json([
             'success' => true,
@@ -554,6 +547,46 @@ class CustomersController extends Controller
     }
     
     /**
+     * Bulk verify emails.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function bulkVerifyEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        $userIds = $request->user_ids;
+        $verifiedCount = 0;
+        
+        foreach ($userIds as $userId) {
+            $user = User::find($userId);
+            
+            if ($user && !$user->email_verified_at) {
+                $user->email_verified_at = now();
+                $user->save();
+                $verifiedCount++;
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => "$verifiedCount users verified successfully",
+            'verified_count' => $verifiedCount
+        ]);
+    }
+    
+    /**
      * Export users to CSV.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -566,6 +599,18 @@ class CustomersController extends Controller
         // Apply filters if provided
         if ($request->has('role') && $request->role != '') {
             $query->where('role', $request->role);
+        }
+        
+        if ($request->has('verified') && $request->verified != '') {
+            if ($request->verified == 'verified') {
+                $query->whereNotNull('email_verified_at');
+            } else if ($request->verified == 'unverified') {
+                $query->whereNull('email_verified_at');
+            }
+        }
+        
+        if ($request->has('date_from') && $request->date_from != '') {
+            $query->whereDate('created_at', '>=', $request->date_from);
         }
         
         if ($request->has('search') && $request->search != '') {
@@ -630,44 +675,44 @@ class CustomersController extends Controller
     /**
      * Verify user email.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\JsonResponse
      */
-    public function verifyEmail(User $user)
+    public function verifyEmail(User $customer)
     {
-        if ($user->email_verified_at) {
+        if ($customer->email_verified_at) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email already verified.'
             ]);
         }
         
-        $user->email_verified_at = now();
-        $user->save();
+        $customer->email_verified_at = now();
+        $customer->save();
         
         return response()->json([
             'success' => true,
             'message' => 'Email verified successfully.',
-            'verified_at' => $user->email_verified_at
+            'verified_at' => $customer->email_verified_at
         ]);
     }
     
     /**
      * Reset user password and send notification.
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\JsonResponse
      */
-    public function resetPassword(User $user)
+    public function resetPassword(User $customer)
     {
         // Generate random password
         $password = \Str::random(10);
         
-        $user->password = Hash::make($password);
-        $user->save();
+        $customer->password = Hash::make($password);
+        $customer->save();
         
         // Here you would typically send an email with the new password
-        // Mail::to($user->email)->send(new PasswordResetByAdmin($user, $password));
+        // Mail::to($customer->email)->send(new PasswordResetByAdmin($customer, $password));
         
         return response()->json([
             'success' => true,
@@ -679,19 +724,19 @@ class CustomersController extends Controller
     /**
      * Impersonate a user (admin only).
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $customer
      * @return \Illuminate\Http\Response
      */
-    public function impersonate(User $user)
+    public function impersonate(User $customer)
     {
         // Store current user ID in session
         session()->put('impersonator_id', auth()->id());
         
         // Login as the target user
-        Auth::login($user);
+        Auth::login($customer);
         
-        return redirect()->route('dashboard')
-            ->with('success', 'You are now impersonating ' . $user->name);
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'You are now impersonating ' . $customer->name);
     }
     
     /**
@@ -712,7 +757,7 @@ class CustomersController extends Controller
             // Remove the impersonator ID from session
             session()->forget('impersonator_id');
             
-            return redirect()->route('admin.users.index')
+            return redirect()->route('admin.customers')
                 ->with('success', 'You are no longer impersonating.');
         }
         
@@ -726,24 +771,76 @@ class CustomersController extends Controller
      */
     public function getStatistics()
     {
-        $stats = [
-            'total' => User::count(),
-            'by_role' => [
-                'admin' => User::where('role', 'admin')->count(),
-                'manager' => User::where('role', 'manager')->count(),
-                'customer' => User::where('role', 'customer')->count(),
-                'support_agent' => User::where('role', 'support_agent')->count(),
-            ],
-            'verified' => User::whereNotNull('email_verified_at')->count(),
-            'unverified' => User::whereNull('email_verified_at')->count(),
-            'recent' => User::orderBy('created_at', 'desc')->take(5)->get(),
-            'monthly_registrations' => $this->getMonthlyRegistrations()
-        ];
+        // Get current month
+        $now = Carbon::now();
+        $startOfMonth = $now->copy()->startOfMonth();
+        $endOfMonth = $now->copy()->endOfMonth();
+        
+        // Get previous month
+        $startOfLastMonth = $now->copy()->subMonth()->startOfMonth();
+        $endOfLastMonth = $now->copy()->subMonth()->endOfMonth();
+        
+        // Count total customers
+        $totalCustomers = User::where('role', 'customer')->count();
+        
+        // Count verified customers
+        $verifiedCustomers = User::where('role', 'customer')
+            ->whereNotNull('email_verified_at')
+            ->count();
+        
+        // Count unverified customers
+        $unverifiedCustomers = User::where('role', 'customer')
+            ->whereNull('email_verified_at')
+            ->count();
+        
+        // Count new customers this month
+        $newCustomersThisMonth = User::where('role', 'customer')
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->count();
+        
+        // Count new customers last month
+        $newCustomersLastMonth = User::where('role', 'customer')
+            ->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])
+            ->count();
+        
+        // Calculate growth percentage
+        $growth = 0;
+        if ($newCustomersLastMonth > 0) {
+            $growth = round((($newCustomersThisMonth - $newCustomersLastMonth) / $newCustomersLastMonth) * 100);
+        } elseif ($newCustomersThisMonth > 0) {
+            $growth = 100; // If there were no customers last month but there are this month
+        }
         
         return response()->json([
             'success' => true,
-            'stats' => $stats
+            'stats' => [
+                'total' => $totalCustomers,
+                'verified' => $verifiedCustomers,
+                'unverified' => $unverifiedCustomers,
+                'newCustomers' => $newCustomersThisMonth,
+                'growth' => $growth
+            ]
         ]);
+    }
+    
+    /**
+     * Calculate growth rate from previous month.
+     *
+     * @return float
+     */
+    private function calculateGrowthRate()
+    {
+        $currentMonth = now()->month;
+        $previousMonth = now()->subMonth()->month;
+        
+        $currentMonthCount = User::whereMonth('created_at', $currentMonth)->count();
+        $previousMonthCount = User::whereMonth('created_at', $previousMonth)->count();
+        
+        if ($previousMonthCount == 0) {
+            return 100; // If no users in previous month, growth is 100%
+        }
+        
+        return round((($currentMonthCount - $previousMonthCount) / $previousMonthCount) * 100, 1);
     }
     
     /**
