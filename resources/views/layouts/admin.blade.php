@@ -216,7 +216,7 @@
                                 </a>
                             </li>                            
                         </li>
-                        <li x-data="{ open: false }">
+                        {{-- <li x-data="{ open: false }">
                             <div class="tooltip px-4 py-2.5 flex items-center justify-between cursor-pointer text-gray-700 hover:bg-gray-100 rounded-lg nav-item transition-colors"
                                 @click="open = !open">
                                 <div class="flex items-center">
@@ -235,8 +235,8 @@
                                     class="block py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-colors">Product
                                     Tags</a>
                             </div>
-                        </li>
-                        <li x-data="{ open: false }">
+                        </li> --}}
+                        {{-- <li x-data="{ open: false }">
                             <div class="tooltip px-4 py-2.5 flex items-center justify-between cursor-pointer text-gray-700 hover:bg-gray-100 rounded-lg nav-item transition-colors"
                                 @click="open = !open">
                                 <div class="flex items-center">
@@ -254,14 +254,16 @@
                                 <a href="#"
                                     class="block py-2 px-3 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-colors">Suppliers</a>
                             </div>
-                        </li>
+                        </li> --}}
                         <li>
-                            <a href=""
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.customers*') ? 'active' : '' }}">
-                                <i class="ri-user-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
-                                <span class="nav-text">Customers</span>
-                                <span class="tooltip-text" x-show="sidebarCollapsed">Customers</span>
-                            </a>
+                            <li>
+                                <a href="{{ route('admin.customers') }}"
+                                    class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.customers*') ? 'active' : '' }}">
+                                    <i class="ri-group-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
+                                    <span class="nav-text">Customers</span>
+                                    <span class="tooltip-text" x-show="sidebarCollapsed">Customers</span>
+                                </a>
+                            </li>                            
                         </li>
                         <li>
                             <a href=""
