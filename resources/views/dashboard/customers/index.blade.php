@@ -405,7 +405,7 @@
                                 <button @click="goToPage(page)"
                                     class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50"
                                     :class="page === currentPage ?
-                                        'z-10 bg-primary text-white border-primary hover:bg-primary/90' :
+                                        'z-10 bg-primary text-black hover:text-white border-primary hover:bg-primary/90' :
                                         'text-gray-500'">
                                     <span x-text="page"></span>
                                 </button>
@@ -432,7 +432,6 @@
                 </div>
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                
                 <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
                      x-show="showModal"
                      x-transition:enter="ease-out duration-300"
@@ -875,49 +874,49 @@ function customersData() {
             }
         },
         
-        deleteCustomer(customerId) {
-            if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
-                this.performDeleteCustomer(customerId);
-            }
-        },
-        
-        async performDeleteCustomer(customerId) {
-            try {
-                const response = await fetch(`/admin/customers/${customerId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.showToast('Customer deleted successfully', 'success');
-                    
-                    // Reload customers and stats
-                    this.loadCustomers();
-                    this.loadStats();
-                } else {
-                    if (data.related_records) {
-                        let message = 'Cannot delete customer with related records: ';
-                        if (data.related_records.orders) {
-                            message += `${data.related_records.orders} orders`;
-                        }
-                        if (data.related_records.tickets) {
-                            message += data.related_records.orders ? ` and ${data.related_records.tickets} tickets` : `${data.related_records.tickets} tickets`;
-                        }
-                        this.showToast(message, 'warning');
-                    } else {
-                        this.showToast(data.message || 'Error deleting customer', 'error');
-                    }
+            deleteCustomer(customerId) {
+                if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+                    this.performDeleteCustomer(customerId);
                 }
-            } catch (error) {
-                console.error('Error deleting customer:', error);
-                this.showToast('Error deleting customer', 'error');
-            }
-        },
+            },
+            
+            async performDeleteCustomer(customerId) {
+                try {
+                    const response = await fetch(`/admin/customers/${customerId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showToast('Customer deleted successfully', 'success');
+                        
+                        // Reload customers and stats
+                        this.loadCustomers();
+                        this.loadStats();
+                    } else {
+                        if (data.related_records) {
+                            let message = 'Cannot delete customer with related records: ';
+                            if (data.related_records.orders) {
+                                message += `${data.related_records.orders} orders`;
+                            }
+                            if (data.related_records.tickets) {
+                                message += data.related_records.orders ? ` and ${data.related_records.tickets} tickets` : `${data.related_records.tickets} tickets`;
+                            }
+                            this.showToast(message, 'warning');
+                        } else {
+                            this.showToast(data.message || 'Error deleting customer', 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error deleting customer:', error);
+                    this.showToast('Error deleting customer', 'error');
+                }
+            },
         
         // Helper methods
         formatDate(dateString) {
