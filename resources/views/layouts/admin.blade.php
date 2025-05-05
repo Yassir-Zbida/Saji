@@ -266,7 +266,7 @@
                             </li>                            
                         </li>
                         <li>
-                            <a href=""
+                            <a href="{{ route('admin.tickets.index') }}"
                                 class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.ticket*') ? 'active' : '' }}">
                                 <i class="ri-coupon-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Tickets</span>

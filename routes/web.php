@@ -30,6 +30,7 @@ use App\Http\Controllers\ContentController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\AdminSupportTicketController;
 
 
 
@@ -463,16 +464,30 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // Route::post('/customers/bulk-action', [CustomersController::class, 'bulkActionAjax'])->name('admin.customers.bulk-action');
     Route::post('/customers/{customer}/verify-email', [CustomersController::class, 'verifyEmail'])->name('admin.customers.verify-email');
     Route::post('/customers/{customer}/reset-password', [CustomersController::class, 'resetPassword'])->name('admin.customers.reset-password');
-       Route::get('/impersonate/{customer}', [CustomersController::class, 'impersonate'])->name('admin.impersonate');
+    Route::get('/impersonate/{customer}', [CustomersController::class, 'impersonate'])->name('admin.impersonate');
     Route::get('/stop-impersonating', [CustomersController::class, 'stopImpersonating'])->name('admin.stop-impersonating');
     
+    // Admin Ticket views
+    Route::get('/tickets', [AdminSupportTicketController::class, 'index'])->name('admin.tickets.index');
+    Route::get('/tickets/create', [AdminSupportTicketController::class, 'create'])->name('admin.tickets.create');
+    
+    // Admin Ticket API endpoints for AJAX
+    Route::get('/tickets/data', [AdminSupportTicketController::class, 'getTicketsData'])->name('admin.tickets.data');
+    Route::get('/tickets/stats', [AdminSupportTicketController::class, 'getStats'])->name('admin.tickets.stats');
+    Route::post('/tickets', [AdminSupportTicketController::class, 'store'])->name('admin.tickets.store');
+    
+    // These routes must come after the specific routes above
+    Route::get('/tickets/{id}/edit', [AdminSupportTicketController::class, 'edit'])->name('admin.tickets.edit');
+    Route::get('/tickets/{id}', [AdminSupportTicketController::class, 'show'])->name('admin.tickets.show');
+    Route::put('/tickets/{id}', [AdminSupportTicketController::class, 'update'])->name('admin.tickets.update');
+    Route::delete('/tickets/{id}', [AdminSupportTicketController::class, 'destroy'])->name('admin.tickets.destroy');
+    Route::post('/tickets/{id}/response', [AdminSupportTicketController::class, 'addResponse'])->name('admin.tickets.response');
+    Route::patch('/tickets/{id}/status', [AdminSupportTicketController::class, 'updateStatus'])->name('admin.tickets.status');
+    Route::patch('/tickets/{id}/priority', [AdminSupportTicketController::class, 'updatePriority'])->name('admin.tickets.priority');
+    Route::post('/tickets/{id}/close', [AdminSupportTicketController::class, 'close'])->name('admin.tickets.close');
+    Route::post('/tickets/{id}/reopen', [AdminSupportTicketController::class, 'reopen'])->name('admin.tickets.reopen');
 
 
-    // Support Tickets
-    Route::get('/tickets', [TicketController::class, 'index'])->name('admin.tickets');
-    Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('admin.tickets.show');
-    Route::post('/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('admin.tickets.reply');
-    Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus']);
 
     // Content
     Route::get('/content', [ContentController::class, 'index'])->name('admin.content');

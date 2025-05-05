@@ -112,7 +112,7 @@ class SupportTicketController extends Controller
 
         $supportTicket->load('user', 'responses.user');
 
-        return view('support-tickets.show', compact('supportTicket'));
+        return view('dashboard.tickets.show', compact('supportTicket'));
     }
 
     /**
@@ -201,7 +201,7 @@ class SupportTicketController extends Controller
             $supportTicket->update(['status' => 'in_progress']);
         }
 
-        return redirect()->route('support-tickets.show', $supportTicket->id)
+        return redirect()->route('admin.tickets.show', $supportTicket->id)
             ->with('success', 'Response added successfully.');
     }
 
@@ -217,7 +217,7 @@ class SupportTicketController extends Controller
 
         $supportTicket->update(['status' => 'closed']);
 
-        return redirect()->route('dashboard.tickets.index')
+        return redirect()->route('admin.tickets.index')
             ->with('success', 'Ticket closed successfully.');
     }
 
