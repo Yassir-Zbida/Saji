@@ -301,7 +301,7 @@
             <div class="bg-white rounded-lg border border-gray-200 shadow-soft p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-base font-medium text-gray-900">Recent Support Tickets</h3>
-                    <a href="{{ route('admin.tickets') }}" class="text-sm text-primary hover:text-primary-dark">View All</a>
+                    <a href="{{ route('admin.tickets.index') }}" class="text-sm text-primary hover:text-primary-dark">View All</a>
                 </div>
                 <div class="space-y-4" id="recent-tickets-list">
                     @forelse($recentTickets as $ticket)

@@ -221,13 +221,18 @@ class AdminSupportTicketController extends Controller
     /**
      * Add a response to a ticket.
      */
-    public function addResponse(Request $request, $id)
-    {
+public function addResponse(Request $request, $id)
+{
+    // Add this at the beginning of the addResponse method
+    \Log::info('Ticket response table structure', [
+        'columns' => \Schema::getColumnListing('ticket_responses')
+    ]);
+    try {
         $ticket = SupportTicket::findOrFail($id);
 
         $validator = validator($request->all(), [
             'message' => 'required|string',
-            'update_status' => 'nullable|boolean'
+            'update_status' => 'boolean'
         ]);
 
         if ($validator->fails()) {
@@ -242,29 +247,35 @@ class AdminSupportTicketController extends Controller
         $response = new TicketResponse();
         $response->message = $request->message;
         $response->user_id = Auth::id();
-        $response->support_ticket_id = $ticket->id;
+        // Use the correct column name based on your database schema
+        // This is likely 'ticket_id' instead of 'support_ticket_id'
+        $response->ticket_id = $ticket->id;
         $response->save();
         
         // Update ticket status if requested
-        if ($request->update_status && $ticket->status !== 'in_progress') {
+        if ($request->boolean('update_status') && $ticket->status !== 'in_progress') {
             $ticket->status = 'in_progress';
             $ticket->save();
         }
         
-        // Load the updated ticket with responses
-        $ticket->load(['responses.user', 'user']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Response added successfully'
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error adding ticket response', [
+            'ticket_id' => $id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
         
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'ticket' => $ticket,
-                'message' => 'Response added successfully'
-            ]);
-        }
-        
-        return redirect()->route('admin.tickets.show', $ticket->id)
-            ->with('success', 'Response added successfully');
+        return response()->json([
+            'success' => false,
+            'message' => 'Error adding response: ' . $e->getMessage()
+        ], 500);
     }
+}
+
 
     /**
      * Update the status of a ticket.

@@ -19,7 +19,7 @@
                 Back to Tickets
             </a>
             <a href="{{ route('admin.tickets.edit', $ticket->id) }}"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                class="hidden items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
                 <i class="ri-edit-line mr-2"></i>
                 Edit Ticket
             </a>
@@ -350,16 +350,19 @@ function ticketDetailsData(ticketId) {
             this.isSubmitting = true;
             
             try {
+                const formData = {
+                    message: this.replyMessage,
+                    update_status: this.updateStatusOnReply ? 1 : 0
+                };
+                
                 const response = await fetch(`/admin/tickets/${this.ticketId}/response`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        message: this.replyMessage,
-                        update_status: this.updateStatusOnReply
-                    })
+                    body: JSON.stringify(formData)
                 });
                 
                 const data = await response.json();

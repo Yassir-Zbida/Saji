@@ -475,6 +475,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/tickets/data', [AdminSupportTicketController::class, 'getTicketsData'])->name('admin.tickets.data');
     Route::get('/tickets/stats', [AdminSupportTicketController::class, 'getStats'])->name('admin.tickets.stats');
     Route::post('/tickets', [AdminSupportTicketController::class, 'store'])->name('admin.tickets.store');
+
     
     // These routes must come after the specific routes above
     Route::get('/tickets/{id}/edit', [AdminSupportTicketController::class, 'edit'])->name('admin.tickets.edit');
