@@ -620,21 +620,17 @@ function customersData() {
         isLoading: true,
         showFilters: false,
         
-        // Modal state
         showModal: false,
         modalCustomer: null,
         
-        // Pagination
         currentPage: 1,
         lastPage: 1,
         totalCustomers: 0,
         perPage: 10,
         
-        // Sorting
         sortField: 'created_at',
         sortDirection: 'desc',
         
-        // Filters
         filters: {
             role: '',
             verified: '',
@@ -642,7 +638,6 @@ function customersData() {
             search: ''
         },
         
-        // Computed properties
         get customersCount() {
             return this.customers.length;
         },
@@ -652,16 +647,13 @@ function customersData() {
             const maxPages = 5;
             
             if (this.lastPage <= maxPages) {
-                // Show all pages if there are few
                 for (let i = 1; i <= this.lastPage; i++) {
                     pages.push(i);
                 }
             } else {
-                // Show a subset of pages with current page in the middle
                 let startPage = Math.max(1, this.currentPage - 2);
                 let endPage = Math.min(this.lastPage, startPage + maxPages - 1);
                 
-                // Adjust if we're near the end
                 if (endPage - startPage < maxPages - 1) {
                     startPage = Math.max(1, endPage - maxPages + 1);
                 }
@@ -674,7 +666,6 @@ function customersData() {
             return pages;
         },
         
-        // Helper methods for analytics to prevent NaN
         getVerificationRate() {
             if (!this.stats.total || this.stats.total === 0) return 0;
             return Math.round((this.stats.verified / this.stats.total) * 100);
@@ -689,17 +680,14 @@ function customersData() {
             return this.stats.growth || 0;
         },
         
-        // Lifecycle methods
         init() {
             this.loadCustomers();
             this.loadStats();
             
-            // Initialize pagination variables
             this.currentPage = 1;
             this.lastPage = 1;
         },
         
-        // Methods
         async loadCustomers() {
             this.isLoading = true;
             
@@ -741,7 +729,6 @@ function customersData() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Ensure all stats properties exist with default values
                     this.stats = {
                         total: data.stats.total || 0,
                         verified: data.stats.verified || 0,
@@ -759,7 +746,6 @@ function customersData() {
             }
         },
         
-        // Pagination methods
         prevPage() {
             if (this.currentPage > 1) {
                 this.currentPage--;
@@ -781,13 +767,10 @@ function customersData() {
             }
         },
         
-        // Sorting methods
         sortBy(field) {
             if (this.sortField === field) {
-                // Toggle direction if already sorting by this field
                 this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
             } else {
-                // Default to descending for new sort field
                 this.sortField = field;
                 this.sortDirection = 'desc';
             }
@@ -795,9 +778,8 @@ function customersData() {
             this.loadCustomers();
         },
         
-        // Filter methods
         applyFilters() {
-            this.currentPage = 1; // Reset to first page when applying filters
+            this.currentPage = 1; 
             this.loadCustomers();
         },
         
@@ -813,9 +795,7 @@ function customersData() {
             this.loadCustomers();
         },
         
-        // Individual customer actions
         async viewCustomerDetails(customerId) {
-            // Show the modal and set loading state
             this.showModal = true;
             this.modalCustomer = null;
             
@@ -824,7 +804,6 @@ function customersData() {
                 const data = await response.json();
                 
                 if (data.success) {
-    // Ensure orders and tickets are arrays even if they're not provided
     const user = data.user;
     user.orders = Array.isArray(user.orders) ? user.orders : [];
             user.tickets = Array.isArray(user.tickets) ? user.tickets : [];
@@ -895,7 +874,6 @@ function customersData() {
                     if (data.success) {
                         this.showToast('Customer deleted successfully', 'success');
                         
-                        // Reload customers and stats
                         this.loadCustomers();
                         this.loadStats();
                     } else {
@@ -918,7 +896,6 @@ function customersData() {
                 }
             },
         
-        // Helper methods
         formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
@@ -953,17 +930,14 @@ function customersData() {
         },
         
         showToast(message, type = 'success') {
-            // Check if Toast function exists (from a library like Toastify or custom implementation)
             if (typeof Toast === 'function') {
                 Toast(message, type);
             } else {
-                // Fallback to alert if no toast library is available
                 alert(message);
             }
         },
         
         exportUsers() {
-            // Build query string with current filters
             const params = new URLSearchParams({
                 role: this.filters.role,
                 verified: this.filters.verified,
@@ -971,7 +945,6 @@ function customersData() {
                 search: this.filters.search
             });
             
-            // Redirect to export endpoint with filters
             window.location.href = `/admin/customers/export?${params.toString()}`;
         }
     };

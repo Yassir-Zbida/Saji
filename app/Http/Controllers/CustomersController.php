@@ -131,12 +131,20 @@ class CustomersController extends Controller
             $customer->load('supportTickets');
         }
 
-        // Ensure orders and tickets are arrays even if they don't exist
+        // Convert to array for manipulation
         $userData = $customer->toArray();
+        
+        // Ensure orders is an array
         if (!isset($userData['orders'])) {
             $userData['orders'] = [];
         }
-        if (!isset($userData['tickets'])) {
+        
+        // Map supportTickets to tickets for the frontend
+        if (isset($userData['support_tickets'])) {
+            $userData['tickets'] = $userData['support_tickets'];
+        } elseif (isset($userData['supportTickets'])) {
+            $userData['tickets'] = $userData['supportTickets'];
+        } else {
             $userData['tickets'] = [];
         }
 
@@ -482,97 +490,6 @@ class CustomersController extends Controller
             'message' => 'User deleted successfully'
         ]);
     }
-
-    /**
-     * Perform bulk actions on users via AJAX.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    // public function bulkActionAjax(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'action' => 'required|in:delete,change_role',
-    //         'user_ids' => 'required|array',
-    //         'user_ids.*' => 'exists:users,id',
-    //         'new_role' => 'required_if:action,change_role|in:admin,manager,customer,support_agent',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'errors' => $validator->errors()
-    //         ], 422);
-    //     }
-
-    //     $userIds = $request->user_ids;
-
-    //     // Prevent actions on own account
-    //     if (in_array(auth()->id(), $userIds)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'You cannot perform bulk actions on your own account.'
-    //         ], 403);
-    //     }
-
-    //     $results = [
-    //         'success' => true,
-    //         'processed' => count($userIds),
-    //         'successful' => 0,
-    //         'failed' => 0,
-    //         'message' => ''
-    //     ];
-
-    //     switch ($request->action) {
-    //         case 'delete':
-    //             foreach ($userIds as $userId) {
-    //                 $user = User::find($userId);
-
-    //                 if (!$user) {
-    //                     $results['failed']++;
-    //                     continue;
-    //                 }
-
-    //                 // Skip users with related records
-    //                 $hasRelatedRecords = false;
-
-    //                 if (method_exists($user, 'orders') && $user->orders()->count() > 0) {
-    //                     $hasRelatedRecords = true;
-    //                 }
-
-    //                 if (method_exists($user, 'supportTickets') && $user->supportTickets()->count() > 0) {
-    //                     $hasRelatedRecords = true;
-    //                 }
-
-    //                 if ($hasRelatedRecords) {
-    //                     $results['failed']++;
-    //                     continue;
-    //                 }
-
-    //                 $user->delete();
-    //                 $results['successful']++;
-    //             }
-
-    //             $results['message'] = "{$results['successful']} users deleted successfully. {$results['failed']} users could not be deleted.";
-    //             break;
-
-    //         case 'change_role':
-    //             User::whereIn('id', $userIds)->update(['role' => $request->new_role]);
-    //             $results['successful'] = count($userIds);
-    //             $results['message'] = "{$results['successful']} users updated to role: {$request->new_role}";
-    //             break;
-    //     }
-
-    //     return response()->json($results);
-    // }
-
-    /**
-     * Bulk verify emails.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-
 
     /**
      * Export users to CSV.
