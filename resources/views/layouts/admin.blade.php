@@ -273,16 +273,9 @@
                                 <span class="tooltip-text" x-show="sidebarCollapsed">Tickets</span>
                             </a>
                         </li>
+                
                         <li>
-                            <a href=""
-                                class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.analytics*') ? 'active' : '' }}">
-                                <i class="ri-bar-chart-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
-                                <span class="nav-text">Analytics</span>
-                                <span class="tooltip-text" x-show="sidebarCollapsed">Analytics</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href=""
+                            <a href="{{ route('admin.coupons') }}"
                                 class="tooltip flex items-center px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 nav-item transition-colors {{ request()->routeIs('admin.discounts*') ? 'active' : '' }}">
                                 <i class="ri-percent-line text-lg" :class="sidebarCollapsed ? '' : 'mr-3'"></i>
                                 <span class="nav-text">Discounts</span>

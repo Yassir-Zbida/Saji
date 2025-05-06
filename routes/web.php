@@ -488,16 +488,21 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/tickets/{id}/close', [AdminSupportTicketController::class, 'close'])->name('admin.tickets.close');
     Route::post('/tickets/{id}/reopen', [AdminSupportTicketController::class, 'reopen'])->name('admin.tickets.reopen');
 
-
-
-    // Content
     Route::get('/content', [ContentController::class, 'index'])->name('admin.content');
-
-    // Marketing
     Route::get('/marketing', [MarketingController::class, 'index'])->name('admin.marketing');
 
-    // Discounts
-    Route::get('/discounts', [DiscountController::class, 'index'])->name('admin.discounts');
+    // Coupons
+    Route::get('/coupons', [CouponController::class, 'index'])->name('admin.coupons');
+    Route::get('/coupons-data', [CouponController::class, 'getCouponsData'])->name('admin.coupons.data');
+    Route::get('/coupons/statistics', [CouponController::class, 'getStatistics'])->name('admin.coupons.statistics');
+    Route::get('/coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create');
+    Route::post('/coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
+    Route::get('/coupons/{id}/details', [CouponController::class, 'details'])->name('admin.coupons.details');
+    Route::get('/coupons/{id}/edit', [CouponController::class, 'edit'])->name('admin.coupons.edit');
+    Route::put('/coupons/{id}', [CouponController::class, 'update'])->name('admin.coupons.update');
+    Route::delete('/coupons/{id}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
+    Route::post('/coupons/{id}/toggle-status', [CouponController::class, 'toggleStatus'])->name('admin.coupons.toggle-status');
+    Route::get('/coupons/export', [CouponController::class, 'export'])->name('admin.coupons.export');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings');
